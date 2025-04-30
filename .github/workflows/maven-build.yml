@@ -35,7 +35,7 @@ jobs:
       - name: 🧱 Set up JDK and Maven
         uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00  # v4.7.1
         with:
-          distribution: adopt
+          distribution: temurin
           java-version: 17
           gpg-private-key: ${{ secrets.COM_SONATYPE_CENTRAL_POLARION_OPENSOURCE_GPG_PRIVATE_KEY }}
       - name: 📝 Get the project version
@@ -105,14 +105,14 @@ jobs:
         if: github.event_name == 'push'
         env:
           GITHUB_HEAD_REF: ${{ github.head_ref }}
-        run: mvn --batch-mode clean package # sonar:sonar -Dsonar.branch.name="${GITHUB_HEAD_REF}"
+        run: mvn --batch-mode clean package sonar:sonar -Dsonar.branch.name="${GITHUB_HEAD_REF}"
       - name: 📦 Build with Maven for PRs
         if: github.event_name == 'pull_request'
         env:
           GITHUB_HEAD_REF: ${{ github.head_ref }}
           GITHUB_BASE_REF: ${{ github.base_ref }}
           GITHUB_PR_NUMBER_REF: ${{ github.event.pull_request.number }}
-        run: mvn --batch-mode clean package # sonar:sonar -Dsonar.pullrequest.base="${GITHUB_HEAD_REF}" -Dsonar.pullrequest.branch="${GITHUB_BASE_REF}" -Dsonar.pullrequest.key="${GITHUB_PR_NUMBER_REF}"
+        run: mvn --batch-mode clean package sonar:sonar -Dsonar.pullrequest.base="${GITHUB_HEAD_REF}" -Dsonar.pullrequest.branch="${GITHUB_BASE_REF}" -Dsonar.pullrequest.key="${GITHUB_PR_NUMBER_REF}"
     outputs:
       project_version: ${{ steps.project_version.outputs.project_version }}
       cache_key: ${{ steps.cache_key.outputs.cache_key }}
@@ -135,7 +135,7 @@ jobs:
       - name: 🧱 Set up JDK and Maven
         uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00  # v4.7.1
         with:
-          distribution: adopt
+          distribution: temurin
           java-version: 17
           gpg-private-key: ${{ secrets.COM_SONATYPE_CENTRAL_POLARION_OPENSOURCE_GPG_PRIVATE_KEY }}
       - name: 💾 Restore cache using cache key
@@ -147,7 +147,7 @@ jobs:
             /home/runner/work
           key: ${{ needs.build.outputs.cache_key }}
       - name: 📦 Deploy artifacts to Maven Central
-        run: mvn --batch-mode -Dmaven.test.skip=true deploy -P gpg-sign -P nexus-staging -Dnexus-staging-maven-plugin.autoReleaseAfterClose=false
+        run: mvn --batch-mode -Dmaven.test.skip=true deploy -P gpg-sign -P nexus-staging
 
   # Deploy releases and snapshots for main branch to GitHub Packages
   deploy-github-packages:
@@ -165,7 +165,7 @@ jobs:
       - name: 🧱 Set up JDK and Maven
         uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00  # v4.7.1
         with:
-          distribution: adopt
+          distribution: temurin
           java-version: 17
       - name: 💾 Restore cache using cache key
         id: restore-cache
