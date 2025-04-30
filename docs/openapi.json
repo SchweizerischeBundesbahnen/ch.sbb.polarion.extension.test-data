@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.1",
   "info": {
-    "title": "extension-name REST API",
+    "title": "Test Data REST API",
     "version": "v1"
   },
   "paths": {
@@ -23,6 +23,156 @@
         "summary": "Returns basic context information of Polarion's extension",
         "tags": [
           "Extension Information"
+        ]
+      }
+    },
+    "/api/projects/{projectId}/spaces/{spaceId}/documents/{documentName}": {
+      "post": {
+        "operationId": "createDocumentWithGeneratedWorkItems",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "spaceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "documentName",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "quantity",
+            "schema": {
+              "default": 100,
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Document successfully created with generated work items"
+          },
+          "409": {
+            "description": "Document with this name already exists"
+          }
+        },
+        "summary": "Create document with generated work items",
+        "tags": [
+          "Test Data"
+        ]
+      }
+    },
+    "/api/projects/{projectId}/spaces/{spaceId}/documents/{documentName}/append": {
+      "patch": {
+        "operationId": "extendDocumentWithGeneratedWorkItems",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "spaceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "documentName",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "quantity",
+            "schema": {
+              "default": 100,
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Document successfully appended with generated work items"
+          }
+        },
+        "summary": "Append generated work items to the document",
+        "tags": [
+          "Test Data"
+        ]
+      }
+    },
+    "/api/projects/{projectId}/spaces/{spaceId}/documents/{documentName}/change-wi-descriptions": {
+      "patch": {
+        "operationId": "changeDocumentWorkItemDescriptions",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "spaceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "documentName",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "interval",
+            "schema": {
+              "default": 5,
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "WorkItem descriptions successfully changed"
+          }
+        },
+        "summary": "Change WorkItem Descriptions",
+        "tags": [
+          "Test Data"
         ]
       }
     },
@@ -55,17 +205,14 @@
         "properties": {
           "baseUrl": {
             "description": "Returns the base URL constructed with the extension context",
-            "example": "/polarion/pdf-exporter",
             "type": "string"
           },
           "extensionContext": {
             "description": "The extension context used as a base for URL construction",
-            "example": "pdf-exporter",
             "type": "string"
           },
           "restUrl": {
             "description": "Returns the REST API URL constructed with the extension context",
-            "example": "/polarion/pdf-exporter/rest",
             "type": "string"
           },
           "swaggerUiUrl": {

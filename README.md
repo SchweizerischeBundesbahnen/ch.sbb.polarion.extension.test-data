@@ -9,9 +9,14 @@
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_open-source-polarion-java-repo-template&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_open-source-polarion-java-repo-template)
 [![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_open-source-polarion-java-repo-template&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_open-source-polarion-java-repo-template)
 
-# Polarion ALM extension to <...>
+# Test Data extension for Polarion ALM
 
-This Polarion extension provides possibility to <...>
+This Polarion extension is designed for generation of test data in Polarion.
+
+> [!IMPORTANT]
+> Starting from version 2.0.0 only latest version of Polarion is supported.
+> Right now it is Polarion 2410.
+
 ## Build
 
 This extension can be produced using maven:
@@ -21,8 +26,8 @@ mvn clean package
 
 ## Installation to Polarion
 
-To install the extension to Polarion `ch.sbb.polarion.extension.<extension_name>-<version>.jar`
-should be copied to `<polarion_home>/polarion/extensions/ch.sbb.polarion.extension.<extension_name>/eclipse/plugins`
+To install the extension to Polarion `ch.sbb.polarion.extension.test-data-<version>.jar`
+should be copied to `<polarion_home>/polarion/extensions/ch.sbb.polarion.extension.test-data/eclipse/plugins`
 It can be done manually or automated using maven build:
 ```bash
 mvn clean install -P install-to-local-polarion
@@ -33,14 +38,6 @@ Changes only take effect after restart of Polarion.
 
 ## Polarion configuration
 
-<...>
+### REST API
 
-
-## Extension Configuration
-
-<...>
-
-
-## Usage
-
-<...>
+This extension provides REST API. OpenAPI Specification can be obtained [here](docs/openapi.json).
