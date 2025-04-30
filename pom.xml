@@ -13,7 +13,7 @@
     <packaging>jar</packaging>
 
     <name>Test data generation extension of Polarion ALM</name>
-    <description>TThis is a Polarion extension that allows to generate huge documents with lots of workitems for performance testing purposes</description>
+    <description>This is a Polarion extension that allows to generate huge documents with lots of workitems for performance testing purposes</description>
     <url>https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data</url>
 
     <licenses>

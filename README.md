@@ -12,6 +12,8 @@
 # Test Data extension for Polarion ALM
 
 This Polarion extension is designed for generation of test data in Polarion.
+Right now it supports generation of huge documents with random data containing lots of WorkItems with text and pictures.
+All the functionality is exposed via REST API, no UI is provided.
 
 > [!IMPORTANT]
 > Starting from version 2.0.0 only latest version of Polarion is supported.
