@@ -16,7 +16,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -69,11 +68,9 @@ public class ProjectTemplateServiceTest {
         InputStream inputStream = new ByteArrayInputStream(zipData);
         byte[] fileContent = "test content".getBytes(StandardCharsets.UTF_8);
 
-        // Mock the initial stream reading
         streamUtilsMockedStatic.when(() -> StreamUtils.suckStream(eq(inputStream), eq(true)))
                 .thenReturn(zipData);
 
-        // Mock reading content from ZIP entries
         streamUtilsMockedStatic.when(() -> StreamUtils.suckStream(any(ZipInputStream.class), eq(false)))
                 .thenReturn(fileContent);
 
@@ -83,6 +80,27 @@ public class ProjectTemplateServiceTest {
 
         verify(repositoryConnection).makeFolders(any(ILocation.class));
         verify(repositoryConnection).create(any(ILocation.class), any(ByteArrayInputStream.class));
+    }
+
+    @Test
+    void testSaveProjectTemplateWithHash() throws Exception {
+        String templateId = "testTemplate";
+        String templateHash = "abc123def456";
+        byte[] zipData = createTestZipData();
+        InputStream inputStream = new ByteArrayInputStream(zipData);
+        byte[] fileContent = "test content".getBytes(StandardCharsets.UTF_8);
+
+        streamUtilsMockedStatic.when(() -> StreamUtils.suckStream(eq(inputStream), eq(true)))
+                .thenReturn(zipData);
+
+        streamUtilsMockedStatic.when(() -> StreamUtils.suckStream(any(ZipInputStream.class), eq(false)))
+                .thenReturn(fileContent);
+
+        when(repositoryConnection.exists(any(ILocation.class))).thenReturn(false);
+
+        service.saveProjectTemplate(templateId, inputStream, templateHash);
+
+        verify(repositoryConnection, atLeastOnce()).create(any(ILocation.class), any(ByteArrayInputStream.class));
     }
 
     @Test
@@ -99,6 +117,59 @@ public class ProjectTemplateServiceTest {
 
         assertThrows(IllegalArgumentException.class,
                 () -> service.saveProjectTemplate("  ", inputStream, null));
+    }
+
+    @Test
+    void testReadTemplateHashSuccess() throws Exception {
+        String templateId = "testTemplate";
+        String expectedHash = "abc123def456";
+        byte[] hashBytes = expectedHash.getBytes(StandardCharsets.UTF_8);
+
+        when(repositoryConnection.exists(any(ILocation.class))).thenReturn(true);
+        when(repositoryConnection.getContent(any(ILocation.class)))
+                .thenReturn(new ByteArrayInputStream(hashBytes));
+
+        streamUtilsMockedStatic.when(() -> StreamUtils.suckStream(any(InputStream.class), eq(true)))
+                .thenReturn(hashBytes);
+
+        String result = service.readTemplateHash(templateId);
+
+        assertEquals(expectedHash, result);
+    }
+
+    @Test
+    void testReadTemplateHashNotFound() {
+        String templateId = "testTemplate";
+
+        when(repositoryConnection.exists(any(ILocation.class))).thenReturn(false);
+
+        String result = service.readTemplateHash(templateId);
+
+        assertNull(result);
+    }
+
+    @Test
+    void testReadTemplateHashNullTemplateId() {
+        assertThrows(IllegalArgumentException.class,
+                () -> service.readTemplateHash(null));
+    }
+
+    @Test
+    void testReadTemplateHashEmptyTemplateId() {
+        assertThrows(IllegalArgumentException.class,
+                () -> service.readTemplateHash("  "));
+    }
+
+    @Test
+    void testReadTemplateHashIOException() throws Exception {
+        String templateId = "testTemplate";
+
+        when(repositoryConnection.exists(any(ILocation.class))).thenReturn(true);
+        when(repositoryConnection.getContent(any(ILocation.class)))
+                .thenThrow(new RuntimeException("Connection error"));
+
+        assertThrows(ProjectTemplateService.TemplateProcessingException.class,
+                () -> service.readTemplateHash(templateId));
     }
 
     private byte[] createTestZipData() throws Exception {

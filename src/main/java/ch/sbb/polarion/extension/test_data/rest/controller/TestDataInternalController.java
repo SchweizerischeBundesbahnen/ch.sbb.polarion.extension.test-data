@@ -119,7 +119,7 @@ public class TestDataInternalController {
             @PathParam("templateId") String templateId,
             @PathParam("templateHash") String templateHash,
             @FormDataParam("file") FormDataBodyPart file
-            ) {
+    ) {
 
         if (templateId == null || templateId.trim().isEmpty()) {
             throw new IllegalArgumentException("Template ID cannot be null or empty");
@@ -173,12 +173,8 @@ public class TestDataInternalController {
                     })
             );
         } catch (ProjectTemplateService.TemplateProcessingException e) {
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Template not found: " + templateId)
-                    .build();
-        } catch (IllegalArgumentException e) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(e.getMessage())
+                    .entity("Failed to save template due to user project creation error: " + e.getMessage())
                     .build();
         }
     }

@@ -38,8 +38,9 @@ public class ProjectTemplateService {
     /**
      * Saves a project template from an input stream.
      *
-     * @param templateId  The unique identifier for the template
-     * @param inputStream The input stream containing the template zip file
+     * @param templateId   The unique identifier for the template
+     * @param inputStream  The input stream containing the template zip file
+     * @param templateHash The hash value of the template, used for integrity verification
      * @throws IllegalArgumentException    if templateId is null or empty
      * @throws TemplateProcessingException if template processing fails
      */
@@ -76,6 +77,7 @@ public class ProjectTemplateService {
     /**
      * Checks if a ZIP can be processed with the given charset.
      */
+    @SuppressWarnings("java:S5042")
     private boolean canProcessZip(byte[] zipData, Charset charset) {
         try (ByteArrayInputStream bais = new ByteArrayInputStream(zipData);
              ZipInputStream zis = new ZipInputStream(bais, charset)) {
@@ -88,6 +90,7 @@ public class ProjectTemplateService {
     /**
      * Extracts and saves ZIP contents to repository.
      */
+    @SuppressWarnings("java:S5042")
     private void saveZipProjectTemplates(String templateId, byte[] zipData, String templateHash, Charset charset) {
         IRepositoryConnection connection = repositoryService.getConnection(TEMPLATES_ROOT_REPO);
         ILocation templateFolder = TEMPLATES_ROOT_REPO.append(templateId);
@@ -205,7 +208,7 @@ public class ProjectTemplateService {
         try (InputStream is = connection.getContent(hashLocation)) {
             byte[] hashBytes = StreamUtils.suckStream(is, true);
             return new String(hashBytes, StandardCharsets.UTF_8).trim();
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new TemplateProcessingException("Failed to read template hash: " + templateId, e);
         }
     }
