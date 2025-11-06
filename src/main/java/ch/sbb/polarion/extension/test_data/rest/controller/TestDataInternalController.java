@@ -107,7 +107,7 @@ public class TestDataInternalController {
 
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @Path("/templates/{templateId}")
+    @Path("/templates/{templateId}/{templateHash}")
     @Operation(
             summary = "Upload and save a project template",
             responses = {
@@ -117,7 +117,9 @@ public class TestDataInternalController {
     )
     public Response saveProjectTemplate(
             @PathParam("templateId") String templateId,
-            @FormDataParam("file") FormDataBodyPart file) {
+            @PathParam("templateHash") String templateHash,
+            @FormDataParam("file") FormDataBodyPart file
+            ) {
 
         if (templateId == null || templateId.trim().isEmpty()) {
             throw new IllegalArgumentException("Template ID cannot be null or empty");
@@ -131,7 +133,8 @@ public class TestDataInternalController {
             polarionService.callPrivileged(() -> TransactionalExecutor.executeInWriteTransaction(
                     transaction -> {
                         InputStream inputStream = file.getValueAs(InputStream.class);
-                        projectTemplateService.saveProjectTemplate(templateId, inputStream);
+
+                        projectTemplateService.saveProjectTemplate(templateId, inputStream, templateHash);
                         return null;
                     })
             );
@@ -144,25 +147,31 @@ public class TestDataInternalController {
     }
 
     @GET
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    @Path("/templates/{templateId}/download")
+    @Produces(MediaType.TEXT_PLAIN)
+    @Path("/templates/{templateId}/hash")
     @Operation(
-            summary = "Download a zipped project template",
+            summary = "Get the hash of a project template",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Template successfully downloaded"),
-                    @ApiResponse(responseCode = "404", description = "Template not found"),
+                    @ApiResponse(responseCode = "200", description = "Template hash successfully retrieved"),
+                    @ApiResponse(responseCode = "404", description = "Template or hash not found"),
                     @ApiResponse(responseCode = "400", description = "Invalid template ID")
             }
     )
-    public Response downloadProjectTemplate(@PathParam("templateId") String templateId) {
+    public Response getTemplateHash(@PathParam("templateId") String templateId) {
         try {
-            byte[] zipBytes = projectTemplateService.downloadTemplate(templateId);
+            return polarionService.callPrivileged(() ->
+                    TransactionalExecutor.executeInReadOnlyTransaction(transaction -> {
+                        String hash = projectTemplateService.readTemplateHash(templateId);
 
-            return Response.ok(zipBytes)
-                    .header("Content-Disposition", "attachment; filename=" + templateId + ".zip")
-                    .header("Content-Type", MediaType.APPLICATION_OCTET_STREAM)
-                    .build();
+                        if (hash == null) {
+                            return Response.status(Response.Status.NOT_FOUND)
+                                    .entity("Hash not found for template: " + templateId)
+                                    .build();
+                        }
 
+                        return Response.ok(hash).build();
+                    })
+            );
         } catch (ProjectTemplateService.TemplateProcessingException e) {
             return Response.status(Response.Status.NOT_FOUND)
                     .entity("Template not found: " + templateId)

@@ -9,7 +9,6 @@ import com.polarion.subterra.base.location.ILocation;
 import com.polarion.subterra.base.location.Location;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -17,7 +16,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
 
 /**
  * Service for managing Polarion project templates.
@@ -42,19 +40,15 @@ public class ProjectTemplateService {
      *
      * @param templateId  The unique identifier for the template
      * @param inputStream The input stream containing the template zip file
-     * @throws IllegalArgumentException     if templateId is null or empty
+     * @throws IllegalArgumentException    if templateId is null or empty
      * @throws TemplateProcessingException if template processing fails
      */
-    public void saveProjectTemplate(String templateId, InputStream inputStream) {
+    public void saveProjectTemplate(String templateId, InputStream inputStream, String templateHash) {
         validateTemplateId(templateId);
 
         try {
             byte[] zipData = StreamUtils.suckStream(inputStream, true);
-
-            Properties properties = new Properties();
-            projectLifecycleManager.saveProjectTemplate(templateId, properties, null);
-
-            saveUploadedProjectTemplates(templateId, zipData);
+            saveUploadedProjectTemplates(templateId, zipData, templateHash);
 
         } catch (Exception e) {
             throw new TemplateProcessingException("Failed to save project template: " + templateId, e);
@@ -62,103 +56,16 @@ public class ProjectTemplateService {
     }
 
     /**
-     * Downloads a project template as a ZIP archive.
-     *
-     * @param templateId The unique identifier of the template to download
-     * @return byte array containing the zipped template
-     * @throws IllegalArgumentException     if templateId is null or empty
-     * @throws TemplateProcessingException if template doesn't exist or download fails
-     */
-    public byte[] downloadTemplate(String templateId) {
-        validateTemplateId(templateId);
-
-        ILocation templateLocation = TEMPLATES_ROOT_REPO.append(templateId);
-        validateTemplateExists(templateLocation);
-
-        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
-             ZipOutputStream zos = new ZipOutputStream(baos)) {
-            createZipFromTemplate(templateLocation, zos);
-            zos.finish();
-            return baos.toByteArray();
-        } catch (IOException e) {
-            throw new TemplateProcessingException("Failed to download template: " + templateId, e);
-        }
-    }
-
-    /**
-     * Writes a project template to an existing ZipOutputStream.
-     *
-     * @param zos            The output stream to write to
-     * @param templateId     The template identifier
-     * @param defaultTemplate Flag indicating if this is a default template (currently unused)
-     */
-    public void writeProjectTemplateTo(ZipOutputStream zos, String templateId, boolean defaultTemplate) {
-        validateTemplateId(templateId);
-        ILocation templateLocation = TEMPLATES_ROOT_REPO.append(templateId);
-
-        try {
-            createZipFromTemplate(templateLocation, zos);
-        } catch (IOException e) {
-            throw new TemplateProcessingException("Failed to write template to stream: " + templateId, e);
-        }
-    }
-
-    /**
-     * Creates a ZIP archive from a template stored in the repository.
-     */
-    private void createZipFromTemplate(ILocation templateRootRepo, ZipOutputStream zos) throws IOException {
-        IRepositoryConnection connection = repositoryService.getConnection(TEMPLATES_ROOT_REPO);
-
-        for (Object object : connection.getSubLocations(templateRootRepo, true)) {
-            ILocation location = (ILocation) object;
-
-            try (InputStream is = connection.getContent(location)) {
-                ZipEntry entry = createZipEntry(connection, location);
-
-                if (entry != null) {
-                    addEntryToZip(zos, is, entry);
-                }
-            }
-        }
-    }
-
-    /**
-     * Creates a ZipEntry for a given repository location.
-     */
-    private ZipEntry createZipEntry(IRepositoryConnection connection, ILocation location) {
-        String relativePath = location.getRelativeLocation(TEMPLATES_ROOT_REPO).getLocationPath();
-
-        if (connection.isFolder(location)) {
-            return new ZipEntry(relativePath + "/");
-        }
-
-        if (connection.isFile(location)) {
-            return new ZipEntry(relativePath);
-        }
-
-        return null;
-    }
-
-    /**
-     * Adds an entry to the ZIP output stream.
-     */
-    private void addEntryToZip(ZipOutputStream zos, InputStream is, ZipEntry entry) throws IOException {
-        entry.setMethod(ZipEntry.DEFLATED);
-        zos.putNextEntry(entry);
-        StreamUtils.copy(is, zos);
-    }
-
-    /**
      * Saves uploaded project templates with charset fallback.
      */
-    private void saveUploadedProjectTemplates(String templateId, byte[] zipData) {
+    private void saveUploadedProjectTemplates(String templateId, byte[] zipData, String templateHash) {
         if (canProcessZip(zipData, StandardCharsets.UTF_8)) {
-            saveZipProjectTemplates(templateId, zipData, StandardCharsets.UTF_8);
+            saveZipProjectTemplates(templateId, zipData, templateHash, StandardCharsets.UTF_8);
             return;
         }
 
         if (canProcessZip(zipData, FALLBACK_CHARSET)) {
-            saveZipProjectTemplates(templateId, zipData, FALLBACK_CHARSET);
+            saveZipProjectTemplates(templateId, zipData, templateHash, FALLBACK_CHARSET);
             return;
         }
 
@@ -181,11 +88,20 @@ public class ProjectTemplateService {
     /**
      * Extracts and saves ZIP contents to repository.
      */
-    private void saveZipProjectTemplates(String templateId, byte[] zipData, Charset charset) {
+    private void saveZipProjectTemplates(String templateId, byte[] zipData, String templateHash, Charset charset) {
         IRepositoryConnection connection = repositoryService.getConnection(TEMPLATES_ROOT_REPO);
         ILocation templateFolder = TEMPLATES_ROOT_REPO.append(templateId);
 
         recreateTemplateFolder(connection, templateFolder);
+
+        Properties properties = new Properties();
+        projectLifecycleManager.saveProjectTemplate(templateId, properties, null);
+
+        if (templateHash != null) {
+            ILocation templateHashLocation = templateFolder.append(".templatehash");
+            byte[] content = templateHash.getBytes(charset);
+            connection.create(templateHashLocation, new ByteArrayInputStream(content));
+        }
 
         try (ByteArrayInputStream bais = new ByteArrayInputStream(zipData);
              ZipInputStream zis = new ZipInputStream(bais, charset)) {
@@ -237,16 +153,25 @@ public class ProjectTemplateService {
      * @return normalized entry name or null if entry should be skipped
      */
     private String normalizeEntryName(String entryName) {
-        int firstSlash = entryName.indexOf("/");
-        if (firstSlash >= 0) {
-            entryName = entryName.substring(firstSlash);
-        }
-
-        if (entryName.equals("/") || entryName.isEmpty()) {
+        if (entryName == null || entryName.isEmpty()) {
             return null;
         }
 
-        return entryName.startsWith("/") ? entryName.substring(1) : entryName;
+        entryName = entryName.replace("\\", "/");
+
+        while (entryName.startsWith("/")) {
+            entryName = entryName.substring(1);
+        }
+
+        if (entryName.isEmpty()) {
+            return null;
+        }
+
+        if (entryName.contains("..")) {
+            return null;
+        }
+
+        return entryName;
     }
 
     /**
@@ -258,14 +183,30 @@ public class ProjectTemplateService {
         }
     }
 
+
     /**
-     * Validates that template exists in repository.
+     * Reads the stored hash for a template.
+     *
+     * @param templateId The unique identifier of the template
+     * @return The stored hash, or null if hash file doesn't exist
+     * @throws TemplateProcessingException if reading fails
      */
-    private void validateTemplateExists(ILocation templateLocation) {
+    public String readTemplateHash(String templateId) {
+        validateTemplateId(templateId);
+
         IRepositoryConnection connection = repositoryService.getConnection(TEMPLATES_ROOT_REPO);
-        if (!connection.exists(templateLocation)) {
-            throw new TemplateProcessingException(
-                    "Template not found: " + templateLocation.getLastComponent(), null);
+        ILocation templateFolder = TEMPLATES_ROOT_REPO.append(templateId);
+        ILocation hashLocation = templateFolder.append(".templatehash");
+
+        if (!connection.exists(hashLocation)) {
+            return null;
+        }
+
+        try (InputStream is = connection.getContent(hashLocation)) {
+            byte[] hashBytes = StreamUtils.suckStream(is, true);
+            return new String(hashBytes, StandardCharsets.UTF_8).trim();
+        } catch (IOException e) {
+            throw new TemplateProcessingException("Failed to read template hash: " + templateId, e);
         }
     }
 

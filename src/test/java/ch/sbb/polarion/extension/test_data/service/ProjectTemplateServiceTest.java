@@ -79,9 +79,8 @@ public class ProjectTemplateServiceTest {
 
         when(repositoryConnection.exists(any(ILocation.class))).thenReturn(false);
 
-        service.saveProjectTemplate(templateId, inputStream);
+        service.saveProjectTemplate(templateId, inputStream, null);
 
-        verify(projectLifecycleManager).saveProjectTemplate(eq(templateId), any(), eq(null));
         verify(repositoryConnection).makeFolders(any(ILocation.class));
         verify(repositoryConnection).create(any(ILocation.class), any(ByteArrayInputStream.class));
     }
@@ -91,7 +90,7 @@ public class ProjectTemplateServiceTest {
         InputStream inputStream = new ByteArrayInputStream(new byte[0]);
 
         assertThrows(IllegalArgumentException.class,
-                () -> service.saveProjectTemplate(null, inputStream));
+                () -> service.saveProjectTemplate(null, inputStream, null));
     }
 
     @Test
@@ -99,80 +98,7 @@ public class ProjectTemplateServiceTest {
         InputStream inputStream = new ByteArrayInputStream(new byte[0]);
 
         assertThrows(IllegalArgumentException.class,
-                () -> service.saveProjectTemplate("  ", inputStream));
-    }
-
-    @Test
-    void testDownloadTemplateSuccess() throws Exception {
-        String templateId = "testTemplate";
-        ILocation templateLocation = mock(ILocation.class);
-        ILocation fileLocation = mock(ILocation.class);
-        ILocation relativePath = mock(ILocation.class);
-
-        when(repositoryConnection.exists(any(ILocation.class))).thenReturn(true);
-        when(repositoryConnection.getSubLocations(any(ILocation.class), eq(true)))
-                .thenReturn(Collections.singletonList(fileLocation));
-        when(repositoryConnection.isFile(fileLocation)).thenReturn(true);
-        when(repositoryConnection.isFolder(fileLocation)).thenReturn(false);
-        when(fileLocation.getRelativeLocation(any(ILocation.class))).thenReturn(relativePath);
-        when(relativePath.getLocationPath()).thenReturn("test.txt");
-        when(repositoryConnection.getContent(fileLocation))
-                .thenReturn(new ByteArrayInputStream("test content".getBytes()));
-
-        streamUtilsMockedStatic.when(() -> StreamUtils.copy(any(InputStream.class), any(ZipOutputStream.class)))
-                .thenAnswer(invocation -> null);
-
-        byte[] result = service.downloadTemplate(templateId);
-
-        assertNotNull(result);
-        assertTrue(result.length > 0);
-    }
-
-    @Test
-    void testDownloadTemplateTemplateNotFound() {
-        String templateId = "nonExistent";
-
-        when(repositoryConnection.exists(any(ILocation.class))).thenReturn(false);
-
-        assertThrows(ProjectTemplateService.TemplateProcessingException.class,
-                () -> service.downloadTemplate(templateId));
-    }
-
-    @Test
-    void testDownloadTemplateNullTemplateId() {
-        assertThrows(IllegalArgumentException.class,
-                () -> service.downloadTemplate(null));
-    }
-
-    @Test
-    void testWriteProjectTemplateToSuccess() throws Exception {
-        String templateId = "testTemplate";
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ZipOutputStream zos = new ZipOutputStream(baos);
-        ILocation fileLocation = mock(ILocation.class);
-        ILocation relativePath = mock(ILocation.class);
-
-        when(repositoryConnection.getSubLocations(any(ILocation.class), eq(true)))
-                .thenReturn(Collections.singletonList(fileLocation));
-        when(repositoryConnection.isFile(fileLocation)).thenReturn(true);
-        when(repositoryConnection.isFolder(fileLocation)).thenReturn(false);
-        when(fileLocation.getRelativeLocation(any(ILocation.class))).thenReturn(relativePath);
-        when(relativePath.getLocationPath()).thenReturn("test.txt");
-        when(repositoryConnection.getContent(fileLocation))
-                .thenReturn(new ByteArrayInputStream("test".getBytes()));
-
-        streamUtilsMockedStatic.when(() -> StreamUtils.copy(any(InputStream.class), any(ZipOutputStream.class)))
-                .thenAnswer(invocation -> null);
-
-        assertDoesNotThrow(() -> service.writeProjectTemplateTo(zos, templateId, false));
-    }
-
-    @Test
-    void testWriteProjectTemplateToNullTemplateId() {
-        ZipOutputStream zos = mock(ZipOutputStream.class);
-
-        assertThrows(IllegalArgumentException.class,
-                () -> service.writeProjectTemplateTo(zos, null, false));
+                () -> service.saveProjectTemplate("  ", inputStream, null));
     }
 
     private byte[] createTestZipData() throws Exception {
