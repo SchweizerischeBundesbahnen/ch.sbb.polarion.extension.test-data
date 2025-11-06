@@ -7,6 +7,7 @@ import com.polarion.platform.core.PlatformContext;
 import com.polarion.platform.service.repository.IRepositoryConnection;
 import com.polarion.platform.service.repository.IRepositoryService;
 import com.polarion.subterra.base.location.ILocation;
+import lombok.SneakyThrows;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,7 +24,7 @@ import java.util.zip.ZipOutputStream;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class ProjectTemplateServiceTest {
+class ProjectTemplateServiceTest {
     private MockedStatic<PlatformContext> platformContextMockedStatic;
     private MockedStatic<StreamUtils> streamUtilsMockedStatic;
     private IRepositoryService repositoryService;
@@ -62,7 +63,8 @@ public class ProjectTemplateServiceTest {
     }
 
     @Test
-    void testSaveProjectTemplateSuccess() throws Exception {
+    @SneakyThrows
+    void testSaveProjectTemplateSuccess() {
         String templateId = "testTemplate";
         byte[] zipData = createTestZipData();
         InputStream inputStream = new ByteArrayInputStream(zipData);
@@ -83,7 +85,8 @@ public class ProjectTemplateServiceTest {
     }
 
     @Test
-    void testSaveProjectTemplateWithHash() throws Exception {
+    @SneakyThrows
+    void testSaveProjectTemplateWithHash() {
         String templateId = "testTemplate";
         String templateHash = "abc123def456";
         byte[] zipData = createTestZipData();
@@ -120,7 +123,7 @@ public class ProjectTemplateServiceTest {
     }
 
     @Test
-    void testReadTemplateHashSuccess() throws Exception {
+    void testReadTemplateHashSuccess() {
         String templateId = "testTemplate";
         String expectedHash = "abc123def456";
         byte[] hashBytes = expectedHash.getBytes(StandardCharsets.UTF_8);
@@ -161,7 +164,7 @@ public class ProjectTemplateServiceTest {
     }
 
     @Test
-    void testReadTemplateHashIOException() throws Exception {
+    void testReadTemplateHashIOException() {
         String templateId = "testTemplate";
 
         when(repositoryConnection.exists(any(ILocation.class))).thenReturn(true);
@@ -186,7 +189,7 @@ public class ProjectTemplateServiceTest {
     }
 
     @Test
-    void testReadTemplateHashThrowsTemplateProcessingException() throws Exception {
+    void testReadTemplateHashThrowsTemplateProcessingException() {
         String templateId = "testTemplate";
         when(repositoryConnection.exists(any(ILocation.class))).thenReturn(true);
         when(repositoryConnection.getContent(any(ILocation.class)))

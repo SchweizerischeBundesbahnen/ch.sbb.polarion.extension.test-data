@@ -2,7 +2,6 @@ package ch.sbb.polarion.extension.test_data.rest.controller;
 
 import ch.sbb.polarion.extension.generic.rest.filter.Secured;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
-import org.glassfish.jersey.media.multipart.FormDataParam;
 
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
