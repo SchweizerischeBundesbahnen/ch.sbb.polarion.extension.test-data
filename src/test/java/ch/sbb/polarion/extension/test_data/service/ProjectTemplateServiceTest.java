@@ -16,6 +16,7 @@ import org.mockito.MockedStatic;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -82,6 +83,47 @@ class ProjectTemplateServiceTest {
 
         verify(repositoryConnection).makeFolders(any(ILocation.class));
         verify(repositoryConnection).create(any(ILocation.class), any(ByteArrayInputStream.class));
+    }
+
+    @Test
+    @SneakyThrows
+    void testSaveUploadedProjectTemplatesValidUtf8() {
+        byte[] zipData = createTestZipData();
+        ProjectTemplateService spyService = spy(service);
+
+        doReturn(true).when(spyService).canProcessZip(zipData, StandardCharsets.UTF_8);
+        doNothing().when(spyService).saveZipProjectTemplates(any(), any(), any(), eq(StandardCharsets.UTF_8));
+
+        spyService.saveUploadedProjectTemplates("testTemplate", zipData, null);
+
+        verify(spyService).saveZipProjectTemplates("testTemplate", zipData, null, StandardCharsets.UTF_8);
+    }
+
+    @Test
+    @SneakyThrows
+    void testSaveUploadedProjectTemplatesValidFallbackCharset() {
+        byte[] zipData = createTestZipData();
+        ProjectTemplateService spyService = spy(service);
+
+        doReturn(false).when(spyService).canProcessZip(zipData, StandardCharsets.UTF_8);
+        doReturn(true).when(spyService).canProcessZip(zipData, Charset.forName("CP437"));
+        doNothing().when(spyService).saveZipProjectTemplates(any(), any(), any(), eq(Charset.forName("CP437")));
+
+        spyService.saveUploadedProjectTemplates("testTemplate", zipData, null);
+
+        verify(spyService).saveZipProjectTemplates("testTemplate", zipData, null, Charset.forName("CP437"));
+    }
+
+    @Test
+    void testSaveUploadedProjectTemplatesInvalidZipThrowsException() {
+        byte[] zipData = new byte[]{0x00};
+        ProjectTemplateService spyService = spy(service);
+
+        doReturn(false).when(spyService).canProcessZip(zipData, StandardCharsets.UTF_8);
+        doReturn(false).when(spyService).canProcessZip(zipData, Charset.forName("CP437"));
+
+        assertThrows(ProjectTemplateService.TemplateProcessingException.class, () ->
+                spyService.saveUploadedProjectTemplates("testTemplate", zipData, null));
     }
 
     @Test
@@ -197,6 +239,34 @@ class ProjectTemplateServiceTest {
 
         assertThrows(ProjectTemplateService.TemplateProcessingException.class,
                 () -> service.readTemplateHash(templateId));
+    }
+
+    @Test
+    void testNormalizeEntryName_NullOrEmpty() {
+        assertNull(service.normalizeEntryName(null));
+        assertNull(service.normalizeEntryName(""));
+    }
+
+    @Test
+    void testNormalizeEntryName_LeadingSlashes() {
+        assertEquals("file.txt", service.normalizeEntryName("/file.txt"));
+        assertEquals("dir/file.txt", service.normalizeEntryName("///dir/file.txt"));
+    }
+
+    @Test
+    void testNormalizeEntryName_Backslashes() {
+        assertEquals("dir/file.txt", service.normalizeEntryName("\\dir\\file.txt"));
+    }
+
+    @Test
+    void testNormalizeEntryName_DirectoryTraversal() {
+        assertNull(service.normalizeEntryName("../file.txt"));
+        assertNull(service.normalizeEntryName("dir/../file.txt"));
+    }
+
+    @Test
+    void testNormalizeEntryName_ValidName() {
+        assertEquals("dir/file.txt", service.normalizeEntryName("dir/file.txt"));
     }
 
     private byte[] createTestZipData() throws Exception {

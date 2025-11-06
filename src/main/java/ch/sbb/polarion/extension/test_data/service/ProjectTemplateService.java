@@ -7,6 +7,7 @@ import com.polarion.platform.service.repository.IRepositoryConnection;
 import com.polarion.platform.service.repository.IRepositoryService;
 import com.polarion.subterra.base.location.ILocation;
 import com.polarion.subterra.base.location.Location;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -59,7 +60,8 @@ public class ProjectTemplateService {
     /**
      * Saves uploaded project templates with charset fallback.
      */
-    private void saveUploadedProjectTemplates(String templateId, byte[] zipData, String templateHash) {
+    @VisibleForTesting
+    void saveUploadedProjectTemplates(String templateId, byte[] zipData, String templateHash) {
         if (canProcessZip(zipData, StandardCharsets.UTF_8)) {
             saveZipProjectTemplates(templateId, zipData, templateHash, StandardCharsets.UTF_8);
             return;
@@ -77,8 +79,9 @@ public class ProjectTemplateService {
     /**
      * Checks if a ZIP can be processed with the given charset.
      */
+    @VisibleForTesting
     @SuppressWarnings("java:S5042")
-    private boolean canProcessZip(byte[] zipData, Charset charset) {
+    boolean canProcessZip(byte[] zipData, Charset charset) {
         try (ByteArrayInputStream bais = new ByteArrayInputStream(zipData);
              ZipInputStream zis = new ZipInputStream(bais, charset)) {
             return zis.getNextEntry() != null;
@@ -90,8 +93,9 @@ public class ProjectTemplateService {
     /**
      * Extracts and saves ZIP contents to repository.
      */
+    @VisibleForTesting
     @SuppressWarnings("java:S5042")
-    private void saveZipProjectTemplates(String templateId, byte[] zipData, String templateHash, Charset charset) {
+    void saveZipProjectTemplates(String templateId, byte[] zipData, String templateHash, Charset charset) {
         IRepositoryConnection connection = repositoryService.getConnection(TEMPLATES_ROOT_REPO);
         ILocation templateFolder = TEMPLATES_ROOT_REPO.append(templateId);
 
@@ -155,7 +159,8 @@ public class ProjectTemplateService {
      *
      * @return normalized entry name or null if entry should be skipped
      */
-    private String normalizeEntryName(String entryName) {
+    @VisibleForTesting
+    String normalizeEntryName(String entryName) {
         if (entryName == null || entryName.isEmpty()) {
             return null;
         }
