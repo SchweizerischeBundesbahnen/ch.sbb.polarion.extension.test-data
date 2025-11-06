@@ -172,6 +172,30 @@ public class ProjectTemplateServiceTest {
                 () -> service.readTemplateHash(templateId));
     }
 
+    @Test
+    void testSaveProjectTemplateThrowsTemplateProcessingException() {
+        String templateId = "testTemplate";
+        InputStream inputStream = mock(InputStream.class);
+
+        // Simulate StreamUtils.suckStream throwing an exception
+        streamUtilsMockedStatic.when(() -> StreamUtils.suckStream(any(InputStream.class), eq(true)))
+                .thenThrow(new RuntimeException("Stream error"));
+
+        assertThrows(ProjectTemplateService.TemplateProcessingException.class,
+                () -> service.saveProjectTemplate(templateId, inputStream, null));
+    }
+
+    @Test
+    void testReadTemplateHashThrowsTemplateProcessingException() throws Exception {
+        String templateId = "testTemplate";
+        when(repositoryConnection.exists(any(ILocation.class))).thenReturn(true);
+        when(repositoryConnection.getContent(any(ILocation.class)))
+                .thenThrow(new RuntimeException("IO error"));
+
+        assertThrows(ProjectTemplateService.TemplateProcessingException.class,
+                () -> service.readTemplateHash(templateId));
+    }
+
     private byte[] createTestZipData() throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (ZipOutputStream zos = new ZipOutputStream(baos)) {
