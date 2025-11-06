@@ -176,13 +176,51 @@
         ]
       }
     },
-    "/api/templates/{templateId}": {
+    "/api/templates/{templateId}/hash": {
+      "get": {
+        "operationId": "getTemplateHash",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "templateId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Template hash successfully retrieved"
+          },
+          "400": {
+            "description": "Invalid template ID"
+          },
+          "404": {
+            "description": "Template or hash not found"
+          }
+        },
+        "summary": "Get the hash of a project template",
+        "tags": [
+          "Test Data"
+        ]
+      }
+    },
+    "/api/templates/{templateId}/{templateHash}": {
       "post": {
         "operationId": "saveProjectTemplate",
         "parameters": [
           {
             "in": "path",
             "name": "templateId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "templateHash",
             "required": true,
             "schema": {
               "type": "string"
@@ -212,36 +250,6 @@
           }
         },
         "summary": "Upload and save a project template",
-        "tags": [
-          "Test Data"
-        ]
-      }
-    },
-    "/api/templates/{templateId}/download": {
-      "get": {
-        "operationId": "downloadProjectTemplate",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "templateId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Template successfully downloaded"
-          },
-          "400": {
-            "description": "Invalid template ID"
-          },
-          "404": {
-            "description": "Template not found"
-          }
-        },
-        "summary": "Download a zipped project template",
         "tags": [
           "Test Data"
         ]
