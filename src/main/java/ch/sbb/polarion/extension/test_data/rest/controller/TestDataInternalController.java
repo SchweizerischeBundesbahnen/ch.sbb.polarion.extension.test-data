@@ -2,21 +2,31 @@ package ch.sbb.polarion.extension.test_data.rest.controller;
 
 import ch.sbb.polarion.extension.generic.service.PolarionService;
 import ch.sbb.polarion.extension.test_data.service.ModuleService;
+import ch.sbb.polarion.extension.test_data.service.ProjectTemplateService;
+import com.polarion.alm.projects.UserProjectCreationException;
+import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
 import javax.ws.rs.PATCH;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
+import java.io.InputStream;
 import java.net.URI;
 
 @Tag(name = "Test Data")
@@ -30,11 +40,13 @@ public class TestDataInternalController {
 
     protected final PolarionService polarionService;
     private final ModuleService moduleService;
+    private final ProjectTemplateService projectTemplateService;
 
     @SuppressWarnings("unused")
     public TestDataInternalController() {
         polarionService = new PolarionService();
         moduleService = new ModuleService();
+        projectTemplateService = new ProjectTemplateService();
     }
 
     @POST
@@ -91,5 +103,79 @@ public class TestDataInternalController {
         moduleService.changeDocumentWorkItemDescriptions(projectId, spaceId, documentName, interval);
 
         return Response.noContent().build();
+    }
+
+    @POST
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Path("/templates/{templateId}/{templateHash}")
+    @Operation(
+            summary = "Upload and save a project template",
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "Template successfully created"),
+                    @ApiResponse(responseCode = "400", description = "Invalid template data or ID")
+            }
+    )
+    public Response saveProjectTemplate(
+            @PathParam("templateId") String templateId,
+            @PathParam("templateHash") String templateHash,
+            @FormDataParam("file") FormDataBodyPart file
+    ) {
+
+        if (templateId == null || templateId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Template ID cannot be null or empty");
+        }
+
+        if (file == null) {
+            throw new IllegalArgumentException("Template file is required");
+        }
+
+        try {
+            polarionService.callPrivileged(() -> TransactionalExecutor.executeInWriteTransaction(
+                    transaction -> {
+                        InputStream inputStream = file.getValueAs(InputStream.class);
+
+                        projectTemplateService.saveProjectTemplate(templateId, inputStream, templateHash);
+                        return null;
+                    })
+            );
+        } catch (UserProjectCreationException | ProjectTemplateService.TemplateProcessingException e) {
+            throw new IllegalArgumentException("Failed to save template: " + e.getMessage(), e);
+        }
+
+        URI location = UriBuilder.fromPath(httpServletRequest.getRequestURI()).build();
+        return Response.created(location).build();
+    }
+
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    @Path("/templates/{templateId}/hash")
+    @Operation(
+            summary = "Get the hash of a project template",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Template hash successfully retrieved"),
+                    @ApiResponse(responseCode = "404", description = "Template or hash not found"),
+                    @ApiResponse(responseCode = "400", description = "Invalid template ID")
+            }
+    )
+    public Response getTemplateHash(@PathParam("templateId") String templateId) {
+        try {
+            return polarionService.callPrivileged(() ->
+                    TransactionalExecutor.executeInReadOnlyTransaction(transaction -> {
+                        String hash = projectTemplateService.readTemplateHash(templateId);
+
+                        if (hash == null) {
+                            return Response.status(Response.Status.NOT_FOUND)
+                                    .entity("Hash not found for template: " + templateId)
+                                    .build();
+                        }
+
+                        return Response.ok(hash).build();
+                    })
+            );
+        } catch (ProjectTemplateService.TemplateProcessingException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Failed to save template due to user project creation error: " + e.getMessage())
+                    .build();
+        }
     }
 }

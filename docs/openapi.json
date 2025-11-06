@@ -176,6 +176,85 @@
         ]
       }
     },
+    "/api/templates/{templateId}/hash": {
+      "get": {
+        "operationId": "getTemplateHash",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "templateId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Template hash successfully retrieved"
+          },
+          "400": {
+            "description": "Invalid template ID"
+          },
+          "404": {
+            "description": "Template or hash not found"
+          }
+        },
+        "summary": "Get the hash of a project template",
+        "tags": [
+          "Test Data"
+        ]
+      }
+    },
+    "/api/templates/{templateId}/{templateHash}": {
+      "post": {
+        "operationId": "saveProjectTemplate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "templateId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "templateHash",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "$ref": "#/components/schemas/FormDataBodyPart"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Template successfully created"
+          },
+          "400": {
+            "description": "Invalid template data or ID"
+          }
+        },
+        "summary": "Upload and save a project template",
+        "tags": [
+          "Test Data"
+        ]
+      }
+    },
     "/api/version": {
       "get": {
         "operationId": "getVersion",
@@ -200,6 +279,100 @@
   },
   "components": {
     "schemas": {
+      "BodyPart": {
+        "properties": {
+          "contentDisposition": {
+            "$ref": "#/components/schemas/ContentDisposition"
+          },
+          "entity": {
+            "type": "object"
+          },
+          "headers": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "object"
+          },
+          "mediaType": {
+            "properties": {
+              "parameters": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              "subtype": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "wildcardSubtype": {
+                "type": "boolean"
+              },
+              "wildcardType": {
+                "type": "boolean"
+              }
+            },
+            "type": "object"
+          },
+          "messageBodyWorkers": {
+            "$ref": "#/components/schemas/MessageBodyWorkers"
+          },
+          "parameterizedHeaders": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/ParameterizedHeader"
+              },
+              "type": "array"
+            },
+            "type": "object"
+          },
+          "parent": {
+            "$ref": "#/components/schemas/MultiPart"
+          },
+          "providers": {
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "ContentDisposition": {
+        "properties": {
+          "creationDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "modificationDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "parameters": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "readDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "size": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "Context": {
         "description": "Represents the context for building URLs related to Polarion services",
         "properties": {
@@ -217,6 +390,199 @@
           },
           "swaggerUiUrl": {
             "description": "Returns the Swagger UI URL for the REST API",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "FormDataBodyPart": {
+        "properties": {
+          "contentDisposition": {
+            "$ref": "#/components/schemas/ContentDisposition"
+          },
+          "entity": {
+            "type": "object"
+          },
+          "formDataContentDisposition": {
+            "$ref": "#/components/schemas/FormDataContentDisposition"
+          },
+          "headers": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "object"
+          },
+          "mediaType": {
+            "properties": {
+              "parameters": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              "subtype": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "wildcardSubtype": {
+                "type": "boolean"
+              },
+              "wildcardType": {
+                "type": "boolean"
+              }
+            },
+            "type": "object"
+          },
+          "messageBodyWorkers": {
+            "$ref": "#/components/schemas/MessageBodyWorkers"
+          },
+          "name": {
+            "type": "string"
+          },
+          "parameterizedHeaders": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/ParameterizedHeader"
+              },
+              "type": "array"
+            },
+            "type": "object"
+          },
+          "parent": {
+            "$ref": "#/components/schemas/MultiPart"
+          },
+          "providers": {
+            "type": "object"
+          },
+          "simple": {
+            "type": "boolean"
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "FormDataContentDisposition": {
+        "properties": {
+          "creationDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "modificationDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "parameters": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "readDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "size": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "MessageBodyWorkers": {
+        "type": "object"
+      },
+      "MultiPart": {
+        "properties": {
+          "bodyParts": {
+            "items": {
+              "$ref": "#/components/schemas/BodyPart"
+            },
+            "type": "array"
+          },
+          "contentDisposition": {
+            "$ref": "#/components/schemas/ContentDisposition"
+          },
+          "entity": {
+            "type": "object"
+          },
+          "headers": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "object"
+          },
+          "mediaType": {
+            "properties": {
+              "parameters": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              "subtype": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "wildcardSubtype": {
+                "type": "boolean"
+              },
+              "wildcardType": {
+                "type": "boolean"
+              }
+            },
+            "type": "object"
+          },
+          "messageBodyWorkers": {
+            "$ref": "#/components/schemas/MessageBodyWorkers"
+          },
+          "parameterizedHeaders": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/ParameterizedHeader"
+              },
+              "type": "array"
+            },
+            "type": "object"
+          },
+          "parent": {
+            "$ref": "#/components/schemas/MultiPart"
+          },
+          "providers": {
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "ParameterizedHeader": {
+        "properties": {
+          "parameters": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "value": {
             "type": "string"
           }
         },
