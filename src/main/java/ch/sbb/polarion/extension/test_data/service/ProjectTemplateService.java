@@ -32,7 +32,6 @@ public class ProjectTemplateService {
             Location.getLocationWithRepository(IRepositoryService.DEFAULT, "/.polarion/projects/templates/");
     private static final Charset FALLBACK_CHARSET = Charset.forName("CP437");
     private static final String TEMPLATE_HASH_FILE = ".templatehash";
-    private static final String DEMO_PROJECTS_PATH = "/Demo Projects/";
 
     private final IRepositoryService repositoryService;
     private final IProjectLifecycleManager projectLifecycleManager;
@@ -107,7 +106,7 @@ public class ProjectTemplateService {
         validateProjectId(projectId);
 
         ILocation projectLocation = Location.getLocationWithRepository(
-                IRepositoryService.DEFAULT, DEMO_PROJECTS_PATH + projectId);
+                IRepositoryService.DEFAULT, "/Demo Projects/" + projectId);
 
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
              ZipOutputStream zos = new ZipOutputStream(baos)) {
@@ -284,7 +283,7 @@ public class ProjectTemplateService {
                 connection.delete(templateFolder);
             }
         } catch (Exception ignored) {
-
+            //Swallow exceptions during cleanup
         }
     }
 
