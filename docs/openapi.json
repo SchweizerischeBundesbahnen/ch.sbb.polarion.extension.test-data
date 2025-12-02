@@ -176,6 +176,356 @@
         ]
       }
     },
+    "/api/projects/{projectId}/spaces/{spaceId}/report/{name}": {
+      "delete": {
+        "operationId": "deleteLiveReport",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "spaceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Live report removed"
+          }
+        },
+        "summary": "Delete live report",
+        "tags": [
+          "Test Data"
+        ]
+      },
+      "post": {
+        "operationId": "createLiveReport",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "spaceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "text/html": {
+              "schema": {
+                "type": "string"
+              }
+            },
+            "text/plain": {
+              "schema": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Live report created successfully"
+          },
+          "409": {
+            "description": "Live report with this name already exists"
+          }
+        },
+        "summary": "Create a new live report",
+        "tags": [
+          "Test Data"
+        ]
+      }
+    },
+    "/api/projects/{projectId}/spaces/{spaceId}/wiki/{name}": {
+      "delete": {
+        "operationId": "deleteWikiPage",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "spaceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "WikiPage removed"
+          }
+        },
+        "summary": "Delete wiki page",
+        "tags": [
+          "Test Data"
+        ]
+      },
+      "post": {
+        "operationId": "createWikiPage",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "spaceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Wiki page created successfully"
+          },
+          "409": {
+            "description": "Wiki page with this name already exists"
+          }
+        },
+        "summary": "Create a new wiki page",
+        "tags": [
+          "Test Data"
+        ]
+      }
+    },
+    "/api/spaces/{spaceId}/report/{name}": {
+      "delete": {
+        "operationId": "deleteLiveReportInDefaultSpace",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "spaceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Live report removed"
+          }
+        },
+        "summary": "Delete live report in default space",
+        "tags": [
+          "Test Data"
+        ]
+      },
+      "post": {
+        "operationId": "createLiveReportInDefaultSpace",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "spaceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "text/html": {
+              "schema": {
+                "type": "string"
+              }
+            },
+            "text/plain": {
+              "schema": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Live report created successfully"
+          },
+          "409": {
+            "description": "Live report with this name already exists"
+          }
+        },
+        "summary": "Create a new live report in default space",
+        "tags": [
+          "Test Data"
+        ]
+      }
+    },
+    "/api/spaces/{spaceId}/wiki/{name}": {
+      "delete": {
+        "operationId": "deleteWikiPageInDefaultSpace",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "spaceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "WikiPage removed"
+          }
+        },
+        "summary": "Delete wiki page",
+        "tags": [
+          "Test Data"
+        ]
+      },
+      "post": {
+        "operationId": "createWikiPageInDefaultSpace",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "spaceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Wiki page created successfully"
+          },
+          "409": {
+            "description": "Wiki page with this name already exists"
+          }
+        },
+        "summary": "Create a new wiki page in default space",
+        "tags": [
+          "Test Data"
+        ]
+      }
+    },
+    "/api/templates/{projectId}/download": {
+      "get": {
+        "operationId": "downloadProjectTemplate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Template successfully downloaded"
+          },
+          "400": {
+            "description": "Invalid prject ID"
+          },
+          "404": {
+            "description": "Template not found"
+          }
+        },
+        "summary": "Download a zipped project template",
+        "tags": [
+          "Test Data"
+        ]
+      }
+    },
     "/api/templates/{templateId}/hash": {
       "get": {
         "operationId": "getTemplateHash",
