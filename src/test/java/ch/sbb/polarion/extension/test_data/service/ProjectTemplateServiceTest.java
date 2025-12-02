@@ -19,7 +19,6 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -202,44 +201,98 @@ class ProjectTemplateServiceTest {
     }
 
     @Test
-    void testNormalizeEntryName_NullOrEmpty() {
+    void testNormalizeEntryNameNullOrEmpty() {
         assertNull(service.normalizeEntryName(null));
         assertNull(service.normalizeEntryName(""));
     }
 
     @Test
-    void testNormalizeEntryName_LeadingSlashes() {
+    void testNormalizeEntryNameLeadingSlashes() {
         assertEquals("file.txt", service.normalizeEntryName("/file.txt"));
         assertEquals("dir/file.txt", service.normalizeEntryName("///dir/file.txt"));
     }
 
     @Test
-    void testNormalizeEntryName_Backslashes() {
+    void testNormalizeEntryNameBackslashes() {
         assertEquals("dir/file.txt", service.normalizeEntryName("\\dir\\file.txt"));
     }
 
     @Test
-    void testNormalizeEntryName_DirectoryTraversal() {
+    void testNormalizeEntryNameDirectoryTraversal() {
         assertNull(service.normalizeEntryName("../file.txt"));
         assertNull(service.normalizeEntryName("dir/../file.txt"));
     }
 
     @Test
-    void testNormalizeEntryName_ValidName() {
+    void testNormalizeEntryNameValidName() {
         assertEquals("dir/file.txt", service.normalizeEntryName("dir/file.txt"));
     }
 
     @Test
     @SneakyThrows
-    void testCanProcessZip_ValidZip() {
+    void testCanProcessZipValidZip() {
         byte[] zipData = createTestZipData();
         assertTrue(service.canProcessZip(zipData, StandardCharsets.UTF_8));
     }
 
     @Test
-    void testCanProcessZip_InvalidZip() {
+    void testCanProcessZipInvalidZip() {
         byte[] invalidData = "not a zip".getBytes(StandardCharsets.UTF_8);
         assertFalse(service.canProcessZip(invalidData, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    void testCleanupTemplateFolder_ExistsAndDeleted() {
+        ILocation templateFolder = mock(ILocation.class);
+
+        when(repositoryConnection.exists(templateFolder)).thenReturn(true);
+        doNothing().when(repositoryConnection).delete(templateFolder);
+
+        service.cleanupTemplateFolder(repositoryConnection, templateFolder);
+
+        verify(repositoryConnection).exists(templateFolder);
+        verify(repositoryConnection).delete(templateFolder);
+    }
+
+    @Test
+    void testCleanupTemplateFolderDoesNotExist() {
+        ILocation templateFolder = mock(ILocation.class);
+
+        when(repositoryConnection.exists(templateFolder)).thenReturn(false);
+
+        service.cleanupTemplateFolder(repositoryConnection, templateFolder);
+
+        verify(repositoryConnection).exists(templateFolder);
+        verify(repositoryConnection, never()).delete(templateFolder);
+    }
+
+    @Test
+    void testCleanupTemplateFolderDeleteThrowsException() {
+        ILocation templateFolder = mock(ILocation.class);
+        String locationPath = "/test/path";
+
+        when(repositoryConnection.exists(templateFolder)).thenReturn(true);
+        when(templateFolder.toString()).thenReturn(locationPath);
+        doThrow(new RuntimeException("Delete failed")).when(repositoryConnection).delete(templateFolder);
+
+        // Should not throw exception - cleanup is silent
+        assertDoesNotThrow(() -> service.cleanupTemplateFolder(repositoryConnection, templateFolder));
+
+        verify(repositoryConnection).exists(templateFolder);
+        verify(repositoryConnection).delete(templateFolder);
+    }
+
+    @Test
+    void testCleanupTemplateFolder_ExistsThrowsException() {
+        ILocation templateFolder = mock(ILocation.class);
+
+        when(repositoryConnection.exists(templateFolder)).thenThrow(new RuntimeException("Connection error"));
+
+        // Should not throw exception - cleanup is silent
+        assertDoesNotThrow(() -> service.cleanupTemplateFolder(repositoryConnection, templateFolder));
+
+        verify(repositoryConnection).exists(templateFolder);
+        verify(repositoryConnection, never()).delete(templateFolder);
     }
 
     private byte[] createTestZipData() throws Exception {

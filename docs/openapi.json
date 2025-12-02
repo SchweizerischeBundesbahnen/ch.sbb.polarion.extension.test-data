@@ -514,7 +514,7 @@
             "description": "Template successfully downloaded"
           },
           "400": {
-            "description": "Invalid prject ID"
+            "description": "Invalid project ID"
           },
           "404": {
             "description": "Template not found"

@@ -1,6 +1,9 @@
 package ch.sbb.polarion.extension.test_data.service;
 
 import com.polarion.alm.projects.model.IProject;
+import com.polarion.alm.shared.api.model.rp.RichPage;
+import com.polarion.alm.shared.api.model.rp.RichPageReference;
+import com.polarion.alm.shared.api.transaction.WriteTransaction;
 import com.polarion.alm.tracker.IRichPageManager;
 import com.polarion.alm.tracker.IRichPageSelector;
 import com.polarion.alm.tracker.ITrackerService;
@@ -98,6 +101,78 @@ class LiveReportServiceTest {
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("LiveReport already exists")
                 .hasMessageContaining("testProjectId/testSpace/testName");
+    }
+
+    @Test
+    void shouldDeleteLiveReportWithProject() {
+        // Arrange
+        WriteTransaction transaction = mock(WriteTransaction.class);
+        ITrackerProject mockProject = mock(ITrackerProject.class);
+        when(mockProject.getId()).thenReturn("testProjectId");
+        when(iTrackerService.getTrackerProject("testProjectId")).thenReturn(mockProject);
+
+        RichPageReference richPageReference = mock(RichPageReference.class);
+        RichPage richPage = mock(RichPage.class);
+        IRichPage oldApi = mock(IRichPage.class);
+
+        try (var mockedStatic = mockStatic(RichPageReference.class)) {
+            mockedStatic.when(() -> RichPageReference.fromPath("testProjectId/testSpace/testName")).thenReturn(richPageReference);
+            when(richPageReference.getOriginal(transaction)).thenReturn(richPage);
+            when(richPage.getOldApi()).thenReturn(oldApi);
+
+            // Act
+            liveReportService.deleteLiveReport(transaction, "testProjectId", "testSpace", "testName");
+
+            // Assert
+            verify(iTrackerService).getTrackerProject("testProjectId");
+            verify(oldApi).delete();
+        }
+    }
+
+    @Test
+    void shouldDeleteLiveReportWithoutProject() {
+        // Arrange
+        WriteTransaction transaction = mock(WriteTransaction.class);
+
+        RichPageReference richPageReference = mock(RichPageReference.class);
+        RichPage richPage = mock(RichPage.class);
+        IRichPage oldApi = mock(IRichPage.class);
+
+        try (var mockedStatic = mockStatic(RichPageReference.class)) {
+            mockedStatic.when(() -> RichPageReference.fromPath("/testSpace/testName")).thenReturn(richPageReference);
+            when(richPageReference.getOriginal(transaction)).thenReturn(richPage);
+            when(richPage.getOldApi()).thenReturn(oldApi);
+
+            // Act
+            liveReportService.deleteLiveReport(transaction, null, "testSpace", "testName");
+
+            // Assert
+            verify(iTrackerService, never()).getTrackerProject(anyString());
+            verify(oldApi).delete();
+        }
+    }
+
+    @Test
+    void shouldDeleteLiveReportWithEmptyProjectId() {
+        // Arrange
+        WriteTransaction transaction = mock(WriteTransaction.class);
+
+        RichPageReference richPageReference = mock(RichPageReference.class);
+        RichPage richPage = mock(RichPage.class);
+        IRichPage oldApi = mock(IRichPage.class);
+
+        try (var mockedStatic = mockStatic(RichPageReference.class)) {
+            mockedStatic.when(() -> RichPageReference.fromPath("/testSpace/testName")).thenReturn(richPageReference);
+            when(richPageReference.getOriginal(transaction)).thenReturn(richPage);
+            when(richPage.getOldApi()).thenReturn(oldApi);
+
+            // Act
+            liveReportService.deleteLiveReport(transaction, "", "testSpace", "testName");
+
+            // Assert
+            verify(iTrackerService, never()).getTrackerProject(anyString());
+            verify(oldApi).delete();
+        }
     }
 
     @Test

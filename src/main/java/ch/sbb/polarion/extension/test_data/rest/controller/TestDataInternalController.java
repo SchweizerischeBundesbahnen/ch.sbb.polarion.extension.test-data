@@ -196,7 +196,7 @@ public class TestDataInternalController {
             responses = {
                     @ApiResponse(responseCode = "200", description = "Template successfully downloaded"),
                     @ApiResponse(responseCode = "404", description = "Template not found"),
-                    @ApiResponse(responseCode = "400", description = "Invalid prject ID")
+                    @ApiResponse(responseCode = "400", description = "Invalid project ID")
             }
     )
     public Response downloadProjectTemplate(@PathParam("projectId") String projectId) {

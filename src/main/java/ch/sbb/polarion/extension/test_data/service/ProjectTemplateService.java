@@ -162,7 +162,8 @@ public class ProjectTemplateService {
         connection.create(templateHashLocation, new ByteArrayInputStream(content));
     }
 
-    private void extractZipEntries(@NotNull byte[] zipData, @NotNull Charset charset,
+    @SuppressWarnings("java:S5042")
+    private void extractZipEntries(byte @NotNull [] zipData, @NotNull Charset charset,
                                    @NotNull IRepositoryConnection connection, @NotNull ILocation templateFolder) throws IOException {
         try (ByteArrayInputStream bais = new ByteArrayInputStream(zipData);
              ZipInputStream zis = new ZipInputStream(bais, charset)) {
@@ -214,10 +215,6 @@ public class ProjectTemplateService {
 
     @VisibleForTesting
     void createZipFromProject(@NotNull ILocation projectRepo, @NotNull ZipOutputStream zos) throws IOException {
-        if (projectRepo == null || zos == null) {
-            throw new IllegalArgumentException("Project repository and ZIP output stream cannot be null");
-        }
-
         IRepositoryConnection connection = repositoryService.getConnection(projectRepo);
 
         if (connection == null) {
@@ -280,13 +277,14 @@ public class ProjectTemplateService {
         connection.makeFolders(templateFolder);
     }
 
-    private void cleanupTemplateFolder(@NotNull IRepositoryConnection connection, @NotNull ILocation templateFolder) {
+    @VisibleForTesting
+    void cleanupTemplateFolder(@NotNull IRepositoryConnection connection, @NotNull ILocation templateFolder) {
         try {
             if (connection.exists(templateFolder)) {
                 connection.delete(templateFolder);
             }
-        } catch (Exception e) {
-            System.err.println("Failed to cleanup template folder: " + templateFolder + ", error: " + e.getMessage());
+        } catch (Exception ignored) {
+
         }
     }
 
