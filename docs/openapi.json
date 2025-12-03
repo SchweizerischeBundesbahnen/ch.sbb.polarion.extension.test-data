@@ -354,7 +354,7 @@
     },
     "/api/spaces/{spaceId}/report/{name}": {
       "delete": {
-        "operationId": "deleteLiveReportInDefaultSpace",
+        "operationId": "deleteLiveReportFromGlobalRepository",
         "parameters": [
           {
             "in": "path",
@@ -378,13 +378,13 @@
             "description": "Live report removed"
           }
         },
-        "summary": "Delete live report in default space",
+        "summary": "Delete live report from global repository",
         "tags": [
           "Test Data"
         ]
       },
       "post": {
-        "operationId": "createLiveReportInDefaultSpace",
+        "operationId": "createLiveReportInGlobalRepository",
         "parameters": [
           {
             "in": "path",
@@ -425,7 +425,7 @@
             "description": "Live report with this name already exists"
           }
         },
-        "summary": "Create a new live report in default space",
+        "summary": "Create a new live report in global repository",
         "tags": [
           "Test Data"
         ]
@@ -433,7 +433,7 @@
     },
     "/api/spaces/{spaceId}/wiki/{name}": {
       "delete": {
-        "operationId": "deleteWikiPageInDefaultSpace",
+        "operationId": "deleteWikiPageFromGlobalRepository",
         "parameters": [
           {
             "in": "path",
@@ -457,13 +457,13 @@
             "description": "WikiPage removed"
           }
         },
-        "summary": "Delete wiki page",
+        "summary": "Delete wiki page from global repository",
         "tags": [
           "Test Data"
         ]
       },
       "post": {
-        "operationId": "createWikiPageInDefaultSpace",
+        "operationId": "createWikiPageInGlobalRepository",
         "parameters": [
           {
             "in": "path",
@@ -490,7 +490,7 @@
             "description": "Wiki page with this name already exists"
           }
         },
-        "summary": "Create a new wiki page in default space",
+        "summary": "Create a new wiki page in global repository",
         "tags": [
           "Test Data"
         ]

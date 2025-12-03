@@ -17,14 +17,14 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
 public class LiveReportService {
-    private final ITrackerService iTrackerService;
+    private final ITrackerService trackerService;
 
     public LiveReportService() {
         this(PlatformContext.getPlatform().lookupService(ITrackerService.class));
     }
 
-    public LiveReportService(ITrackerService iTrackerService) {
-        this.iTrackerService = iTrackerService;
+    public LiveReportService(ITrackerService trackerService) {
+        this.trackerService = trackerService;
     }
 
     public String createLiveReport(@Nullable String projectId,
@@ -33,11 +33,11 @@ public class LiveReportService {
                                    @NotNull String contentType,
                                    @NotNull String content) {
         try {
-            IRichPageManager iRichPageManager = iTrackerService.getRichPageManager();
+            IRichPageManager iRichPageManager = trackerService.getRichPageManager();
             IRichPageSelector<IRichPage> iRichPageSelector = iRichPageManager.createRichPage();
 
             if (!StringUtils.isEmpty(projectId)) {
-                IProject project = iTrackerService.getTrackerProject(projectId);
+                IProject project = trackerService.getTrackerProject(projectId);
                 iRichPageSelector.project(project.getId());
             }
 
@@ -58,7 +58,7 @@ public class LiveReportService {
     public void deleteLiveReport(@NotNull WriteTransaction transaction, @Nullable String projectId, @NotNull String spaceId, @NotNull String name) {
         IProject project = null;
         if (!StringUtils.isEmpty(projectId)) {
-            project = iTrackerService.getTrackerProject(projectId);
+            project = trackerService.getTrackerProject(projectId);
         }
 
         RichPageReference richPageReference = RichPageReference.fromPath(createPath(project, spaceId, name));

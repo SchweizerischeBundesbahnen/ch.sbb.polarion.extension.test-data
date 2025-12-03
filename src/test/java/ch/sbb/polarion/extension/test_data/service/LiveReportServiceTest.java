@@ -27,10 +27,10 @@ class LiveReportServiceTest {
     LiveReportService liveReportService;
 
     @Mock
-    ITrackerService iTrackerService;
+    ITrackerService trackerService;
 
     @Mock
-    IRichPageManager iRichPageManager;
+    IRichPageManager richPageManager;
 
     @Test
     void shouldCreateLiveReport() {
@@ -38,11 +38,11 @@ class LiveReportServiceTest {
         ITrackerProject mockProject = mock(ITrackerProject.class);
         when(mockProject.getId()).thenReturn("testProjectId");
 
-        when(iTrackerService.getRichPageManager()).thenReturn(iRichPageManager);
-        when(iTrackerService.getTrackerProject("testProjectId")).thenReturn(mockProject);
+        when(trackerService.getRichPageManager()).thenReturn(richPageManager);
+        when(trackerService.getTrackerProject("testProjectId")).thenReturn(mockProject);
 
         IRichPageSelector<IRichPage> iRichPageSelector = mock(IRichPageSelector.class);
-        when(iRichPageManager.createRichPage()).thenReturn(iRichPageSelector);
+        when(richPageManager.createRichPage()).thenReturn(iRichPageSelector);
 
         IRichPage iRichPage = mock(IRichPage.class);
         when(iRichPageSelector.spaceAndName("testSpace", "testName")).thenReturn(iRichPage);
@@ -59,10 +59,10 @@ class LiveReportServiceTest {
     @Test
     void shouldCreateLiveReportWithoutProject() {
         // Arrange
-        when(iTrackerService.getRichPageManager()).thenReturn(iRichPageManager);
+        when(trackerService.getRichPageManager()).thenReturn(richPageManager);
 
         IRichPageSelector<IRichPage> iRichPageSelector = mock(IRichPageSelector.class);
-        when(iRichPageManager.createRichPage()).thenReturn(iRichPageSelector);
+        when(richPageManager.createRichPage()).thenReturn(iRichPageSelector);
 
         IRichPage iRichPage = mock(IRichPage.class);
         when(iRichPageSelector.spaceAndName("testSpace", "testName")).thenReturn(iRichPage);
@@ -88,11 +88,11 @@ class LiveReportServiceTest {
         ITrackerProject mockProject = mock(ITrackerProject.class);
         when(mockProject.getId()).thenReturn("testProjectId");
 
-        when(iTrackerService.getRichPageManager()).thenReturn(iRichPageManager);
-        when(iTrackerService.getTrackerProject("testProjectId")).thenReturn(mockProject);
+        when(trackerService.getRichPageManager()).thenReturn(richPageManager);
+        when(trackerService.getTrackerProject("testProjectId")).thenReturn(mockProject);
 
         IRichPageSelector<IRichPage> iRichPageSelector = mock(IRichPageSelector.class);
-        when(iRichPageManager.createRichPage()).thenReturn(iRichPageSelector);
+        when(richPageManager.createRichPage()).thenReturn(iRichPageSelector);
 
         when(iRichPageSelector.spaceAndName("testSpace", "testName")).thenThrow(new WrapperException(new ObjectAlreadyExistsException("", "")));
 
@@ -109,7 +109,7 @@ class LiveReportServiceTest {
         WriteTransaction transaction = mock(WriteTransaction.class);
         ITrackerProject mockProject = mock(ITrackerProject.class);
         when(mockProject.getId()).thenReturn("testProjectId");
-        when(iTrackerService.getTrackerProject("testProjectId")).thenReturn(mockProject);
+        when(trackerService.getTrackerProject("testProjectId")).thenReturn(mockProject);
 
         RichPageReference richPageReference = mock(RichPageReference.class);
         RichPage richPage = mock(RichPage.class);
@@ -124,7 +124,7 @@ class LiveReportServiceTest {
             liveReportService.deleteLiveReport(transaction, "testProjectId", "testSpace", "testName");
 
             // Assert
-            verify(iTrackerService).getTrackerProject("testProjectId");
+            verify(trackerService).getTrackerProject("testProjectId");
             verify(oldApi).delete();
         }
     }
@@ -147,7 +147,7 @@ class LiveReportServiceTest {
             liveReportService.deleteLiveReport(transaction, null, "testSpace", "testName");
 
             // Assert
-            verify(iTrackerService, never()).getTrackerProject(anyString());
+            verify(trackerService, never()).getTrackerProject(anyString());
             verify(oldApi).delete();
         }
     }
@@ -170,7 +170,7 @@ class LiveReportServiceTest {
             liveReportService.deleteLiveReport(transaction, "", "testSpace", "testName");
 
             // Assert
-            verify(iTrackerService, never()).getTrackerProject(anyString());
+            verify(trackerService, never()).getTrackerProject(anyString());
             verify(oldApi).delete();
         }
     }

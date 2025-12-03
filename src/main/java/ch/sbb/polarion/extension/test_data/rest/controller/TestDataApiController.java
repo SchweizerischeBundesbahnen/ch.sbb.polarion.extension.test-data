@@ -52,13 +52,13 @@ public class TestDataApiController extends TestDataInternalController {
     }
 
     @Override
-    public Response createWikiPageInDefaultSpace(String spaceId, String name) {
-        return polarionService.callPrivileged(() -> super.createWikiPageInDefaultSpace(spaceId, name));
+    public Response createWikiPageInGlobalRepository(String spaceId, String name) {
+        return polarionService.callPrivileged(() -> super.createWikiPageInGlobalRepository(spaceId, name));
     }
 
     @Override
-    public Response deleteWikiPageInDefaultSpace(String spaceId, String name) {
-        return polarionService.callPrivileged(() -> super.deleteWikiPageInDefaultSpace(spaceId, name));
+    public Response deleteWikiPageFromGlobalRepository(String spaceId, String name) {
+        return polarionService.callPrivileged(() -> super.deleteWikiPageFromGlobalRepository(spaceId, name));
     }
 
     @Override
@@ -72,12 +72,12 @@ public class TestDataApiController extends TestDataInternalController {
     }
 
     @Override
-    public Response createLiveReportInDefaultSpace(String spaceId, String name, HttpHeaders headers, String content) {
-        return polarionService.callPrivileged(() -> super.createLiveReportInDefaultSpace(spaceId, name, headers, content));
+    public Response createLiveReportInGlobalRepository(String spaceId, String name, HttpHeaders headers, String content) {
+        return polarionService.callPrivileged(() -> super.createLiveReportInGlobalRepository(spaceId, name, headers, content));
     }
 
     @Override
-    public Response deleteLiveReportInDefaultSpace(String spaceId, String name) {
-        return polarionService.callPrivileged(() -> super.deleteLiveReportInDefaultSpace(spaceId, name));
+    public Response deleteLiveReportFromGlobalRepository(String spaceId, String name) {
+        return polarionService.callPrivileged(() -> super.deleteLiveReportFromGlobalRepository(spaceId, name));
     }
 }

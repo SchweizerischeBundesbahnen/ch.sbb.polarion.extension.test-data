@@ -252,20 +252,20 @@ public class TestDataInternalController {
 
     @POST
     @Path("/spaces/{spaceId}/wiki/{name}")
-    @Operation(summary = "Create a new wiki page in default space",
+    @Operation(summary = "Create a new wiki page in global repository",
             responses = {
                     @ApiResponse(responseCode = "201", description = "Wiki page created successfully"),
                     @ApiResponse(responseCode = "409", description = "Wiki page with this name already exists")
             }
     )
-    public Response createWikiPageInDefaultSpace(@PathParam("spaceId") String spaceId, @PathParam("name") String name) {
+    public Response createWikiPageInGlobalRepository(@PathParam("spaceId") String spaceId, @PathParam("name") String name) {
         return createWikiPage(null, spaceId, name);
     }
 
     @DELETE
     @Path("/spaces/{spaceId}/wiki/{name}")
-    @Operation(summary = "Delete wiki page", responses = @ApiResponse(responseCode = "204", description = "WikiPage removed"))
-    public Response deleteWikiPageInDefaultSpace(@PathParam("spaceId") String spaceId, @PathParam("name") String name) {
+    @Operation(summary = "Delete wiki page from global repository", responses = @ApiResponse(responseCode = "204", description = "WikiPage removed"))
+    public Response deleteWikiPageFromGlobalRepository(@PathParam("spaceId") String spaceId, @PathParam("name") String name) {
         return deleteWikiPage(null, spaceId, name);
     }
 
@@ -309,24 +309,24 @@ public class TestDataInternalController {
     @POST
     @Path("/spaces/{spaceId}/report/{name}")
     @Consumes({MediaType.TEXT_PLAIN, MediaType.TEXT_HTML})
-    @Operation(summary = "Create a new live report in default space",
+    @Operation(summary = "Create a new live report in global repository",
             responses = {
                     @ApiResponse(responseCode = "201", description = "Live report created successfully"),
                     @ApiResponse(responseCode = "409", description = "Live report with this name already exists")
             }
     )
-    public Response createLiveReportInDefaultSpace(@PathParam("spaceId") String spaceId,
-                                                   @PathParam("name") String name,
-                                                   @Context HttpHeaders headers,
-                                                   String content) {
+    public Response createLiveReportInGlobalRepository(@PathParam("spaceId") String spaceId,
+                                                       @PathParam("name") String name,
+                                                       @Context HttpHeaders headers,
+                                                       String content) {
 
         return createLiveReport(null, spaceId, name, headers, content);
     }
 
     @DELETE
     @Path("/spaces/{spaceId}/report/{name}")
-    @Operation(summary = "Delete live report in default space", responses = @ApiResponse(responseCode = "204", description = "Live report removed"))
-    public Response deleteLiveReportInDefaultSpace(@PathParam("spaceId") String spaceId, @PathParam("name") String name) {
+    @Operation(summary = "Delete live report from global repository", responses = @ApiResponse(responseCode = "204", description = "Live report removed"))
+    public Response deleteLiveReportFromGlobalRepository(@PathParam("spaceId") String spaceId, @PathParam("name") String name) {
         return deleteLiveReport(null, spaceId, name);
     }
 
