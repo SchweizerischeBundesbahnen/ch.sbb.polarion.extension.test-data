@@ -29,10 +29,10 @@ import java.util.zip.ZipOutputStream;
  */
 public class ProjectTemplateService {
 
-    private static final ILocation TEMPLATES_ROOT_REPO =
+    protected static final ILocation TEMPLATES_ROOT_REPO =
             Location.getLocationWithRepository(IRepositoryService.DEFAULT, "/.polarion/projects/templates/");
     private static final Charset FALLBACK_CHARSET = Charset.forName("CP437");
-    private static final String TEMPLATE_HASH_FILE = ".templatehash";
+    protected static final String TEMPLATE_HASH_FILE = ".templatehash";
 
     private final IRepositoryService repositoryService;
     private final IProjectLifecycleManager projectLifecycleManager;
@@ -154,8 +154,9 @@ public class ProjectTemplateService {
         }
     }
 
-    private void saveTemplateHash(@NotNull IRepositoryConnection connection, @NotNull ILocation templateFolder,
-                                  @NotNull String templateHash, @NotNull Charset charset) {
+    @VisibleForTesting
+    void saveTemplateHash(@NotNull IRepositoryConnection connection, @NotNull ILocation templateFolder,
+                          @NotNull String templateHash, @NotNull Charset charset) {
         ILocation templateHashLocation = templateFolder.append(TEMPLATE_HASH_FILE);
         try (InputStream inputStream = new ByteArrayInputStream(templateHash.getBytes(StandardCharsets.UTF_8))) {
             if (connection.exists(templateHashLocation)) {

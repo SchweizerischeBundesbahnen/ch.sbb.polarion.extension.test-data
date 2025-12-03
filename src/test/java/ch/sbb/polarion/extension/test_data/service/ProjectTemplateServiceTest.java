@@ -22,6 +22,8 @@ import java.util.Collections;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import static ch.sbb.polarion.extension.test_data.service.ProjectTemplateService.TEMPLATES_ROOT_REPO;
+import static ch.sbb.polarion.extension.test_data.service.ProjectTemplateService.TEMPLATE_HASH_FILE;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -127,6 +129,58 @@ class ProjectTemplateServiceTest {
         String result = service.readTemplateHash(templateId);
 
         assertEquals(expectedHash, result);
+    }
+
+    @Test
+    void testSaveTemplateHashCreate() {
+        String templateId = "testTemplate";
+        String templateHash = "abc123";
+        ILocation templateFolder = TEMPLATES_ROOT_REPO.append(templateId);
+        ILocation hashLocation = templateFolder.append(TEMPLATE_HASH_FILE);
+
+        when(repositoryConnection.exists(hashLocation)).thenReturn(false);
+        doNothing().when(repositoryConnection).create(eq(hashLocation), any(InputStream.class));
+
+        service.saveTemplateHash(repositoryConnection, templateFolder, templateHash, StandardCharsets.UTF_8);
+
+        verify(repositoryConnection).exists(hashLocation);
+        verify(repositoryConnection).create(eq(hashLocation), any(InputStream.class));
+        verify(repositoryConnection, never()).setContent(any(), any());
+    }
+
+    @Test
+    void testSaveTemplateHashUpdate() {
+        String templateId = "testTemplate";
+        String templateHash = "abc123";
+        ILocation templateFolder = TEMPLATES_ROOT_REPO.append(templateId);
+        ILocation hashLocation = templateFolder.append(TEMPLATE_HASH_FILE);
+
+        when(repositoryConnection.exists(hashLocation)).thenReturn(true);
+        doNothing().when(repositoryConnection).setContent(eq(hashLocation), any(InputStream.class));
+
+        service.saveTemplateHash(repositoryConnection, templateFolder, templateHash, StandardCharsets.UTF_8);
+
+        verify(repositoryConnection).exists(hashLocation);
+        verify(repositoryConnection).setContent(eq(hashLocation), any(InputStream.class));
+        verify(repositoryConnection, never()).create(any(), any());
+    }
+
+    @Test
+    void testSaveTemplateHashIOException() {
+        String templateId = "testTemplate";
+        String templateHash = "abc123";
+        ILocation templateFolder = TEMPLATES_ROOT_REPO.append(templateId);
+        ILocation hashLocation = templateFolder.append(TEMPLATE_HASH_FILE);
+
+        when(repositoryConnection.exists(hashLocation)).thenReturn(false);
+        doThrow(new RuntimeException("IO error")).when(repositoryConnection)
+                .create(eq(hashLocation), any(InputStream.class));
+
+        assertThrows(RuntimeException.class,
+                () -> service.saveTemplateHash(repositoryConnection, templateFolder, templateHash, StandardCharsets.UTF_8));
+
+        verify(repositoryConnection).exists(hashLocation);
+        verify(repositoryConnection).create(eq(hashLocation), any(InputStream.class));
     }
 
     @Test
