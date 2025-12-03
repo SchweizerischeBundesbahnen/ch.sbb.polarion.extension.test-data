@@ -4,6 +4,7 @@ import com.polarion.alm.projects.IProjectLifecycleManager;
 import com.polarion.core.util.StreamUtils;
 import com.polarion.platform.core.PlatformContext;
 import com.polarion.platform.service.repository.IRepositoryConnection;
+import com.polarion.platform.service.repository.IRepositoryReadOnlyConnection;
 import com.polarion.platform.service.repository.IRepositoryService;
 import com.polarion.subterra.base.location.ILocation;
 import com.polarion.subterra.base.location.Location;
@@ -69,31 +70,6 @@ public class ProjectTemplateService {
     }
 
     /**
-     * Reads the stored hash for a template.
-     *
-     * @param templateId The unique identifier of the template
-     * @return The stored hash, or null if hash file doesn't exist
-     * @throws TemplateProcessingException if reading fails
-     */
-    @Nullable
-    public String readTemplateHash(@NotNull String templateId) {
-        IRepositoryConnection connection = repositoryService.getConnection(TEMPLATES_ROOT_REPO);
-        ILocation templateFolder = TEMPLATES_ROOT_REPO.append(templateId);
-        ILocation hashLocation = templateFolder.append(TEMPLATE_HASH_FILE);
-
-        if (!connection.exists(hashLocation)) {
-            return null;
-        }
-
-        try (InputStream is = connection.getContent(hashLocation)) {
-            byte[] hashBytes = StreamUtils.suckStream(is, true);
-            return new String(hashBytes, StandardCharsets.UTF_8).trim();
-        } catch (Exception e) {
-            throw new TemplateProcessingException("Failed to read template hash: " + templateId, e);
-        }
-    }
-
-    /**
      * Downloads a project template as a ZIP archive from the repository.
      *
      * @param projectId the unique identifier of the project to download
@@ -115,6 +91,30 @@ public class ProjectTemplateService {
             return baos.toByteArray();
         } catch (IOException e) {
             throw new TemplateProcessingException("Failed to download template: " + projectId, e);
+        }
+    }
+
+    /**
+     * Reads the stored hash for a template.
+     *
+     * @param templateId The unique identifier of the template
+     * @return The stored hash, or null if hash file doesn't exist
+     * @throws TemplateProcessingException if reading fails
+     */
+    @Nullable
+    public String readTemplateHash(@NotNull String templateId) {
+        IRepositoryReadOnlyConnection connection = repositoryService.getReadOnlyConnection(TEMPLATES_ROOT_REPO);
+        ILocation templateFolder = TEMPLATES_ROOT_REPO.append(templateId);
+        ILocation hashLocation = templateFolder.append(TEMPLATE_HASH_FILE);
+
+        if (!connection.exists(hashLocation)) {
+            return null;
+        }
+
+        try (InputStream is = connection.getContent(hashLocation)) {
+            return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            throw new TemplateProcessingException("Failed to read template hash: " + templateId, e);
         }
     }
 
@@ -142,11 +142,11 @@ public class ProjectTemplateService {
             Properties properties = new Properties();
             projectLifecycleManager.saveProjectTemplate(templateId, properties, null);
 
+            extractZipEntries(zipData, charset, connection, templateFolder);
+
             if (templateHash != null && !templateHash.trim().isEmpty()) {
                 saveTemplateHash(connection, templateFolder, templateHash, charset);
             }
-
-            extractZipEntries(zipData, charset, connection, templateFolder);
 
         } catch (Exception e) {
             cleanupTemplateFolder(connection, templateFolder);
@@ -157,8 +157,15 @@ public class ProjectTemplateService {
     private void saveTemplateHash(@NotNull IRepositoryConnection connection, @NotNull ILocation templateFolder,
                                   @NotNull String templateHash, @NotNull Charset charset) {
         ILocation templateHashLocation = templateFolder.append(TEMPLATE_HASH_FILE);
-        byte[] content = templateHash.getBytes(charset);
-        connection.create(templateHashLocation, new ByteArrayInputStream(content));
+        try (InputStream inputStream = new ByteArrayInputStream(templateHash.getBytes(StandardCharsets.UTF_8))) {
+            if (connection.exists(templateHashLocation)) {
+                connection.setContent(templateHashLocation, inputStream);
+            } else {
+                connection.create(templateHashLocation, inputStream);
+            }
+        } catch (IOException e) {
+            throw new TemplateProcessingException("Failed to save template hash for template: " + templateFolder.getLocationPath(), e);
+        }
     }
 
     @SuppressWarnings("java:S5042")

@@ -5,6 +5,7 @@ import com.polarion.core.util.StreamUtils;
 import com.polarion.platform.core.IPlatform;
 import com.polarion.platform.core.PlatformContext;
 import com.polarion.platform.service.repository.IRepositoryConnection;
+import com.polarion.platform.service.repository.IRepositoryReadOnlyConnection;
 import com.polarion.platform.service.repository.IRepositoryService;
 import com.polarion.subterra.base.location.ILocation;
 import lombok.SneakyThrows;
@@ -30,6 +31,7 @@ class ProjectTemplateServiceTest {
     private IRepositoryService repositoryService;
     private IProjectLifecycleManager projectLifecycleManager;
     private IRepositoryConnection repositoryConnection;
+    private IRepositoryReadOnlyConnection repositoryReadOnlyConnection;
     private ProjectTemplateService service;
 
     @BeforeEach
@@ -39,10 +41,12 @@ class ProjectTemplateServiceTest {
         repositoryService = mock(IRepositoryService.class);
         projectLifecycleManager = mock(IProjectLifecycleManager.class);
         repositoryConnection = mock(IRepositoryConnection.class);
+        repositoryReadOnlyConnection = mock(IRepositoryReadOnlyConnection.class);
 
         when(platform.lookupService(IRepositoryService.class)).thenReturn(repositoryService);
         when(platform.lookupService(IProjectLifecycleManager.class)).thenReturn(projectLifecycleManager);
         when(repositoryService.getConnection(any(ILocation.class))).thenReturn(repositoryConnection);
+        when(repositoryService.getReadOnlyConnection(any(ILocation.class))).thenReturn(repositoryReadOnlyConnection);
 
         platformContextMockedStatic = mockStatic(PlatformContext.class);
         platformContextMockedStatic.when(PlatformContext::getPlatform).thenReturn(platform);
@@ -104,7 +108,7 @@ class ProjectTemplateServiceTest {
 
         service.saveProjectTemplate(templateId, inputStream, templateHash);
 
-        verify(repositoryConnection, atLeast(2)).create(any(ILocation.class), any(ByteArrayInputStream.class));
+        verify(repositoryConnection, atLeast(1)).create(any(ILocation.class), any(ByteArrayInputStream.class));
     }
 
     @Test
@@ -113,8 +117,8 @@ class ProjectTemplateServiceTest {
         String expectedHash = "abc123def456";
         byte[] hashBytes = expectedHash.getBytes(StandardCharsets.UTF_8);
 
-        when(repositoryConnection.exists(any(ILocation.class))).thenReturn(true);
-        when(repositoryConnection.getContent(any(ILocation.class)))
+        when(repositoryReadOnlyConnection.exists(any(ILocation.class))).thenReturn(true);
+        when(repositoryReadOnlyConnection.getContent(any(ILocation.class)))
                 .thenReturn(new ByteArrayInputStream(hashBytes));
 
         streamUtilsMockedStatic.when(() -> StreamUtils.suckStream(any(InputStream.class), eq(true)))
@@ -140,8 +144,8 @@ class ProjectTemplateServiceTest {
     void testReadTemplateHashIOException() {
         String templateId = "testTemplate";
 
-        when(repositoryConnection.exists(any(ILocation.class))).thenReturn(true);
-        when(repositoryConnection.getContent(any(ILocation.class)))
+        when(repositoryReadOnlyConnection.exists(any(ILocation.class))).thenReturn(true);
+        when(repositoryReadOnlyConnection.getContent(any(ILocation.class)))
                 .thenThrow(new RuntimeException("IO error"));
 
         assertThrows(ProjectTemplateService.TemplateProcessingException.class,
