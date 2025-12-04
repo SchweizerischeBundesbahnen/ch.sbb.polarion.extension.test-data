@@ -36,7 +36,7 @@ public class TestDataApiController extends TestDataInternalController {
     }
 
     @Override
-    public Response downloadProjectTemplate(String projectId) {
-        return polarionService.callPrivileged(() -> super.downloadProjectTemplate(projectId));
+    public Response downloadProjectTemplate(String projectId, String projectGroup) {
+        return polarionService.callPrivileged(() -> super.downloadProjectTemplate(projectId, projectGroup));
     }
 }

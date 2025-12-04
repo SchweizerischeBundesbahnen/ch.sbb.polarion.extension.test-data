@@ -187,6 +187,13 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "in": "query",
+            "name": "projectGroup",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {

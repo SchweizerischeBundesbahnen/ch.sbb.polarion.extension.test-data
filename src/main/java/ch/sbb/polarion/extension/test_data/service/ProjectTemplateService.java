@@ -2,6 +2,7 @@ package ch.sbb.polarion.extension.test_data.service;
 
 import com.polarion.alm.projects.IProjectLifecycleManager;
 import com.polarion.core.util.StreamUtils;
+import com.polarion.core.util.StringUtils;
 import com.polarion.platform.core.PlatformContext;
 import com.polarion.platform.service.repository.IRepositoryConnection;
 import com.polarion.platform.service.repository.IRepositoryReadOnlyConnection;
@@ -16,7 +17,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 import java.util.zip.ZipEntry;
@@ -31,7 +31,6 @@ public class ProjectTemplateService {
 
     protected static final ILocation TEMPLATES_ROOT_REPO =
             Location.getLocationWithRepository(IRepositoryService.DEFAULT, "/.polarion/projects/templates/");
-    protected static final Charset FALLBACK_CHARSET = Charset.forName("CP437");
     protected static final String TEMPLATE_HASH_FILE = ".templatehash";
 
     private final IRepositoryService repositoryService;
@@ -54,13 +53,10 @@ public class ProjectTemplateService {
     public void saveProjectTemplate(@NotNull String templateId, @NotNull InputStream inputStream, @Nullable String templateHash) {
         try {
             byte[] zipData = StreamUtils.suckStream(inputStream, true);
-            if (canProcessZip(zipData, StandardCharsets.UTF_8)) {
-                saveZipProjectTemplates(templateId, zipData, templateHash, StandardCharsets.UTF_8);
-                return;
-            }
-
-            if (canProcessZip(zipData, FALLBACK_CHARSET)) {
-                saveZipProjectTemplates(templateId, zipData, templateHash, FALLBACK_CHARSET);
+            if (canProcessZip(zipData)) {
+                saveZipProjectTemplates(templateId, zipData, templateHash);
+            } else {
+                throw new TemplateProcessingException("Provided input stream is not a valid ZIP archive for template: " + templateId, null);
             }
         } catch (Exception e) {
             throw new TemplateProcessingException("Failed to save project template: " + templateId, e);
@@ -70,17 +66,21 @@ public class ProjectTemplateService {
     /**
      * Downloads a project template as a ZIP archive from the repository.
      *
-     * @param projectId the unique identifier of the project to download
+     * @param projectId    the unique identifier of the project to download
+     * @param projectGroup the group of the project
      * @return byte array containing the compressed template
      * @throws IllegalArgumentException    if projectId is null or empty
      * @throws TemplateProcessingException if the repository connection fails or ZIP creation fails
      */
     @NotNull
-    public byte[] downloadProject(@NotNull String projectId) {
+    public byte[] downloadProject(@NotNull String projectId, @Nullable String projectGroup) {
         validateProjectId(projectId);
 
-        ILocation projectLocation = Location.getLocationWithRepository(
-                IRepositoryService.DEFAULT, "/Demo Projects/" + projectId);
+        String path = StringUtils.isEmpty(projectGroup)
+                ? "/" + projectId
+                : "/" + projectGroup + "/" + projectId;
+
+        ILocation projectLocation = Location.getLocationWithRepository(IRepositoryService.DEFAULT, path);
 
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
              ZipOutputStream zos = new ZipOutputStream(baos)) {
@@ -118,9 +118,9 @@ public class ProjectTemplateService {
 
     @VisibleForTesting
     @SuppressWarnings("java:S5042")
-    boolean canProcessZip(byte @NotNull [] zipData, @NotNull Charset charset) {
+    boolean canProcessZip(byte[] zipData) {
         try (ByteArrayInputStream bais = new ByteArrayInputStream(zipData);
-             ZipInputStream zis = new ZipInputStream(bais, charset)) {
+             ZipInputStream zis = new ZipInputStream(bais, StandardCharsets.UTF_8)) {
             return zis.getNextEntry() != null;
         } catch (IOException e) {
             return false;
@@ -130,7 +130,7 @@ public class ProjectTemplateService {
     @VisibleForTesting
     @SuppressWarnings("java:S5042")
     void saveZipProjectTemplates(@NotNull String templateId, @NotNull byte[] zipData,
-                                 @Nullable String templateHash, @NotNull Charset charset) {
+                                 @Nullable String templateHash) {
         IRepositoryConnection connection = repositoryService.getConnection(TEMPLATES_ROOT_REPO);
         ILocation templateFolder = TEMPLATES_ROOT_REPO.append(templateId);
 
@@ -140,10 +140,10 @@ public class ProjectTemplateService {
             Properties properties = new Properties();
             projectLifecycleManager.saveProjectTemplate(templateId, properties, null);
 
-            extractZipEntries(zipData, charset, connection, templateFolder);
+            extractZipEntries(zipData, connection, templateFolder);
 
             if (templateHash != null && !templateHash.trim().isEmpty()) {
-                saveTemplateHash(connection, templateFolder, templateHash, charset);
+                saveTemplateHash(connection, templateFolder, templateHash);
             }
 
         } catch (Exception e) {
@@ -154,7 +154,7 @@ public class ProjectTemplateService {
 
     @VisibleForTesting
     void saveTemplateHash(@NotNull IRepositoryConnection connection, @NotNull ILocation templateFolder,
-                          @NotNull String templateHash, @NotNull Charset charset) {
+                          @NotNull String templateHash) {
         ILocation templateHashLocation = templateFolder.append(TEMPLATE_HASH_FILE);
         try (InputStream inputStream = new ByteArrayInputStream(templateHash.getBytes(StandardCharsets.UTF_8))) {
             if (connection.exists(templateHashLocation)) {
@@ -168,10 +168,10 @@ public class ProjectTemplateService {
     }
 
     @SuppressWarnings("java:S5042")
-    private void extractZipEntries(byte @NotNull [] zipData, @NotNull Charset charset,
+    private void extractZipEntries(byte @NotNull [] zipData,
                                    @NotNull IRepositoryConnection connection, @NotNull ILocation templateFolder) throws IOException {
         try (ByteArrayInputStream bais = new ByteArrayInputStream(zipData);
-             ZipInputStream zis = new ZipInputStream(bais, charset)) {
+             ZipInputStream zis = new ZipInputStream(bais, StandardCharsets.UTF_8)) {
 
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
@@ -289,7 +289,7 @@ public class ProjectTemplateService {
                 connection.delete(templateFolder);
             }
         } catch (Exception ignored) {
-            //Swallow exceptions during cleanup
+            // Swallow exceptions during cleanup
         }
     }
 

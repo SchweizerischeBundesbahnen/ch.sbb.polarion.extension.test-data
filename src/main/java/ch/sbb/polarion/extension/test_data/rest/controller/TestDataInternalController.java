@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.jetbrains.annotations.Nullable;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -190,12 +191,13 @@ public class TestDataInternalController {
                     @ApiResponse(responseCode = "400", description = "Invalid project ID")
             }
     )
-    public Response downloadProjectTemplate(@PathParam("projectId") String projectId) {
+    public Response downloadProjectTemplate(@PathParam("projectId") String projectId,
+                                            @QueryParam("projectGroup") @Nullable String projectGroup) {
 
         try {
             return polarionService.callPrivileged(() ->
                     TransactionalExecutor.executeInReadOnlyTransaction(transaction -> {
-                        byte[] zipBytes = projectTemplateService.downloadProject(projectId);
+                        byte[] zipBytes = projectTemplateService.downloadProject(projectId, projectGroup);
 
                         return Response.ok(zipBytes)
                                 .header("Content-Disposition", "attachment; filename=" + projectId + ".zip")

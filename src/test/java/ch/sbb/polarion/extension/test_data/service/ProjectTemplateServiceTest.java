@@ -18,7 +18,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
@@ -143,7 +142,7 @@ class ProjectTemplateServiceTest {
         when(repositoryConnection.exists(hashLocation)).thenReturn(false);
         doNothing().when(repositoryConnection).create(eq(hashLocation), any(InputStream.class));
 
-        service.saveTemplateHash(repositoryConnection, templateFolder, templateHash, StandardCharsets.UTF_8);
+        service.saveTemplateHash(repositoryConnection, templateFolder, templateHash);
 
         verify(repositoryConnection).exists(hashLocation);
         verify(repositoryConnection).create(eq(hashLocation), any(InputStream.class));
@@ -160,7 +159,7 @@ class ProjectTemplateServiceTest {
         when(repositoryConnection.exists(hashLocation)).thenReturn(true);
         doNothing().when(repositoryConnection).setContent(eq(hashLocation), any(InputStream.class));
 
-        service.saveTemplateHash(repositoryConnection, templateFolder, templateHash, StandardCharsets.UTF_8);
+        service.saveTemplateHash(repositoryConnection, templateFolder, templateHash);
 
         verify(repositoryConnection).exists(hashLocation);
         verify(repositoryConnection).setContent(eq(hashLocation), any(InputStream.class));
@@ -179,7 +178,7 @@ class ProjectTemplateServiceTest {
                 .create(eq(hashLocation), any(InputStream.class));
 
         assertThrows(RuntimeException.class,
-                () -> service.saveTemplateHash(repositoryConnection, templateFolder, templateHash, StandardCharsets.UTF_8));
+                () -> service.saveTemplateHash(repositoryConnection, templateFolder, templateHash));
 
         verify(repositoryConnection).exists(hashLocation);
         verify(repositoryConnection).create(eq(hashLocation), any(InputStream.class));
@@ -220,7 +219,6 @@ class ProjectTemplateServiceTest {
                 () -> service.saveProjectTemplate(templateId, inputStream, null));
     }
 
-    @Test
     void testDownloadProjectSuccess() {
         String projectId = "testProject";
         ILocation projectLocation = mock(ILocation.class);
@@ -239,7 +237,109 @@ class ProjectTemplateServiceTest {
         streamUtilsMockedStatic.when(() -> StreamUtils.copy(any(InputStream.class), any()))
                 .thenAnswer(invocation -> null);
 
-        byte[] result = service.downloadProject(projectId);
+        byte[] result = service.downloadProject(projectId, null);
+
+        assertNotNull(result);
+        assertTrue(result.length > 0);
+    }
+
+    @Test
+    void testDownloadProjectWithNullGroup() {
+        String projectId = "testProject";
+        ILocation fileLocation = mock(ILocation.class);
+        ILocation relativeLoc = mock(ILocation.class);
+
+        when(repositoryConnection.getSubLocations(any(ILocation.class), eq(true)))
+                .thenReturn(Collections.singletonList(fileLocation));
+        when(repositoryConnection.isFile(fileLocation)).thenReturn(true);
+        when(repositoryConnection.isFolder(fileLocation)).thenReturn(false);
+        when(repositoryConnection.getContent(fileLocation))
+                .thenReturn(new ByteArrayInputStream("test".getBytes()));
+        when(fileLocation.getRelativeLocation(any(ILocation.class)))
+                .thenReturn(relativeLoc);
+        when(relativeLoc.getLocationPath()).thenReturn("test.txt");
+
+        streamUtilsMockedStatic.when(() -> StreamUtils.copy(any(InputStream.class), any()))
+                .thenAnswer(invocation -> null);
+
+        byte[] result = service.downloadProject(projectId, null);
+
+        assertNotNull(result);
+        assertTrue(result.length > 0);
+    }
+
+    @Test
+    void testDownloadProjectWithEmptyGroup() {
+        String projectId = "testProject";
+        ILocation fileLocation = mock(ILocation.class);
+        ILocation relativeLoc = mock(ILocation.class);
+
+        when(repositoryConnection.getSubLocations(any(ILocation.class), eq(true)))
+                .thenReturn(Collections.singletonList(fileLocation));
+        when(repositoryConnection.isFile(fileLocation)).thenReturn(true);
+        when(repositoryConnection.isFolder(fileLocation)).thenReturn(false);
+        when(repositoryConnection.getContent(fileLocation))
+                .thenReturn(new ByteArrayInputStream("test".getBytes()));
+        when(fileLocation.getRelativeLocation(any(ILocation.class)))
+                .thenReturn(relativeLoc);
+        when(relativeLoc.getLocationPath()).thenReturn("test.txt");
+
+        streamUtilsMockedStatic.when(() -> StreamUtils.copy(any(InputStream.class), any()))
+                .thenAnswer(invocation -> null);
+
+        byte[] result = service.downloadProject(projectId, "");
+
+        assertNotNull(result);
+        assertTrue(result.length > 0);
+    }
+
+    @Test
+    void testDownloadProjectWithValidGroup() {
+        String projectId = "testProject";
+        String projectGroup = "DemoProjects";
+        ILocation fileLocation = mock(ILocation.class);
+        ILocation relativeLoc = mock(ILocation.class);
+
+        when(repositoryConnection.getSubLocations(any(ILocation.class), eq(true)))
+                .thenReturn(Collections.singletonList(fileLocation));
+        when(repositoryConnection.isFile(fileLocation)).thenReturn(true);
+        when(repositoryConnection.isFolder(fileLocation)).thenReturn(false);
+        when(repositoryConnection.getContent(fileLocation))
+                .thenReturn(new ByteArrayInputStream("test".getBytes()));
+        when(fileLocation.getRelativeLocation(any(ILocation.class)))
+                .thenReturn(relativeLoc);
+        when(relativeLoc.getLocationPath()).thenReturn("test.txt");
+
+        streamUtilsMockedStatic.when(() -> StreamUtils.copy(any(InputStream.class), any()))
+                .thenAnswer(invocation -> null);
+
+        byte[] result = service.downloadProject(projectId, projectGroup);
+
+        assertNotNull(result);
+        assertTrue(result.length > 0);
+    }
+
+    @Test
+    void testDownloadProjectWithWhitespaceGroup() {
+        String projectId = "testProject";
+        String projectGroup = "   ";
+        ILocation fileLocation = mock(ILocation.class);
+        ILocation relativeLoc = mock(ILocation.class);
+
+        when(repositoryConnection.getSubLocations(any(ILocation.class), eq(true)))
+                .thenReturn(Collections.singletonList(fileLocation));
+        when(repositoryConnection.isFile(fileLocation)).thenReturn(true);
+        when(repositoryConnection.isFolder(fileLocation)).thenReturn(false);
+        when(repositoryConnection.getContent(fileLocation))
+                .thenReturn(new ByteArrayInputStream("test".getBytes()));
+        when(fileLocation.getRelativeLocation(any(ILocation.class)))
+                .thenReturn(relativeLoc);
+        when(relativeLoc.getLocationPath()).thenReturn("test.txt");
+
+        streamUtilsMockedStatic.when(() -> StreamUtils.copy(any(InputStream.class), any()))
+                .thenAnswer(invocation -> null);
+
+        byte[] result = service.downloadProject(projectId, projectGroup);
 
         assertNotNull(result);
         assertTrue(result.length > 0);
@@ -248,16 +348,16 @@ class ProjectTemplateServiceTest {
     @Test
     void testDownloadProjectInvalidId() {
         assertThrows(IllegalArgumentException.class,
-                () -> service.downloadProject(null));
+                () -> service.downloadProject(null, null));
 
         assertThrows(IllegalArgumentException.class,
-                () -> service.downloadProject(""));
+                () -> service.downloadProject("", null));
 
         assertThrows(IllegalArgumentException.class,
-                () -> service.downloadProject("../invalid"));
+                () -> service.downloadProject("../invalid", null));
 
         assertThrows(IllegalArgumentException.class,
-                () -> service.downloadProject("invalid/path"));
+                () -> service.downloadProject("invalid/path", null));
     }
 
     @Test
@@ -292,13 +392,13 @@ class ProjectTemplateServiceTest {
     @SneakyThrows
     void testCanProcessZipValidZip() {
         byte[] zipData = createTestZipData();
-        assertTrue(service.canProcessZip(zipData, StandardCharsets.UTF_8));
+        assertTrue(service.canProcessZip(zipData));
     }
 
     @Test
     void testCanProcessZipInvalidZip() {
         byte[] invalidData = "not a zip".getBytes(StandardCharsets.UTF_8);
-        assertFalse(service.canProcessZip(invalidData, StandardCharsets.UTF_8));
+        assertFalse(service.canProcessZip(invalidData));
     }
 
     @Test
@@ -356,33 +456,6 @@ class ProjectTemplateServiceTest {
     }
 
     @Test
-    @SneakyThrows
-    void testSaveProjectTemplateWithFallbackCharset() {
-        String templateId = "testTemplate";
-        byte[] zipData = createTestZipDataWithSpecificCharset(FALLBACK_CHARSET);
-        InputStream inputStream = new ByteArrayInputStream(zipData);
-        byte[] fileContent = "test content".getBytes(FALLBACK_CHARSET);
-
-        streamUtilsMockedStatic.when(() -> StreamUtils.suckStream(eq(inputStream), eq(true)))
-                .thenReturn(zipData);
-
-        streamUtilsMockedStatic.when(() -> StreamUtils.suckStream(any(InputStream.class), eq(false)))
-                .thenReturn(fileContent);
-
-        when(repositoryConnection.exists(any(ILocation.class))).thenReturn(false);
-
-        // Mock canProcessZip to return false for UTF-8 and true for fallback
-        ProjectTemplateService spyService = spy(service);
-        doReturn(false).when(spyService).canProcessZip(zipData, StandardCharsets.UTF_8);
-        doReturn(true).when(spyService).canProcessZip(zipData, FALLBACK_CHARSET);
-
-        spyService.saveProjectTemplate(templateId, inputStream, null);
-
-        verify(repositoryConnection).makeFolders(any(ILocation.class));
-        verify(projectLifecycleManager).saveProjectTemplate(eq(templateId), any(), isNull());
-    }
-
-    @Test
     void testSaveProjectTemplateInvalidZip() {
         String templateId = "testTemplate";
         byte[] invalidZipData = "not a zip file".getBytes(StandardCharsets.UTF_8);
@@ -391,12 +464,8 @@ class ProjectTemplateServiceTest {
         streamUtilsMockedStatic.when(() -> StreamUtils.suckStream(eq(inputStream), eq(true)))
                 .thenReturn(invalidZipData);
 
-        ProjectTemplateService spyService = spy(service);
-        doReturn(false).when(spyService).canProcessZip(invalidZipData, StandardCharsets.UTF_8);
-        doReturn(false).when(spyService).canProcessZip(invalidZipData, FALLBACK_CHARSET);
-
-        // Should complete without throwing exception but won't save anything
-        spyService.saveProjectTemplate(templateId, inputStream, null);
+        assertThrows(TemplateProcessingException.class,
+                () -> service.saveProjectTemplate(templateId, inputStream, null));
 
         verify(projectLifecycleManager, never()).saveProjectTemplate(anyString(), any(), any());
     }
@@ -411,7 +480,7 @@ class ProjectTemplateServiceTest {
         when(repositoryConnection.exists(hashLocation)).thenReturn(true);
         doNothing().when(repositoryConnection).setContent(eq(hashLocation), any(InputStream.class));
 
-        service.saveTemplateHash(repositoryConnection, templateFolder, templateHash, StandardCharsets.UTF_8);
+        service.saveTemplateHash(repositoryConnection, templateFolder, templateHash);
 
         verify(repositoryConnection).exists(hashLocation);
         verify(repositoryConnection).setContent(eq(hashLocation), any(InputStream.class));
@@ -430,7 +499,7 @@ class ProjectTemplateServiceTest {
                 .setContent(eq(hashLocation), any(InputStream.class));
 
         assertThrows(RuntimeException.class,
-                () -> service.saveTemplateHash(repositoryConnection, templateFolder, templateHash, StandardCharsets.UTF_8));
+                () -> service.saveTemplateHash(repositoryConnection, templateFolder, templateHash));
 
         verify(repositoryConnection).exists(hashLocation);
         verify(repositoryConnection).setContent(eq(hashLocation), any(InputStream.class));
@@ -467,7 +536,7 @@ class ProjectTemplateServiceTest {
                 .thenThrow(new RuntimeException("Connection error"));
 
         assertThrows(RuntimeException.class,
-                () -> service.downloadProject(projectId));
+                () -> service.downloadProject(projectId, null));
     }
 
     @Test
@@ -606,7 +675,7 @@ class ProjectTemplateServiceTest {
 
         service.saveProjectTemplate(templateId, inputStream, emptyHash);
 
-        // Should not save hash file for empty/whitespace hash
+        // Hash file should not be saved when template hash is empty or contains only whitespace
         verify(repositoryConnection, never()).create(
                 argThat(loc -> loc.toString().contains(TEMPLATE_HASH_FILE)),
                 any(InputStream.class));
@@ -641,7 +710,7 @@ class ProjectTemplateServiceTest {
         streamUtilsMockedStatic.when(() -> StreamUtils.copy(any(InputStream.class), any()))
                 .thenAnswer(invocation -> null);
 
-        byte[] result = service.downloadProject(projectId);
+        byte[] result = service.downloadProject(projectId, null);
 
         assertNotNull(result);
         assertTrue(result.length > 0);
@@ -683,7 +752,7 @@ class ProjectTemplateServiceTest {
     @Test
     void testCanProcessZipWithCorruptedData() {
         byte[] corruptedData = new byte[]{0x50, 0x4b, 0x03, 0x04, 0x00, 0x00}; // Partial ZIP header
-        assertFalse(service.canProcessZip(corruptedData, StandardCharsets.UTF_8));
+        assertFalse(service.canProcessZip(corruptedData));
     }
 
     @Test
@@ -699,20 +768,9 @@ class ProjectTemplateServiceTest {
                 .when(projectLifecycleManager).saveProjectTemplate(anyString(), any(), any());
 
         assertThrows(ProjectTemplateService.TemplateProcessingException.class,
-                () -> service.saveZipProjectTemplates(templateId, zipData, null, StandardCharsets.UTF_8));
+                () -> service.saveZipProjectTemplates(templateId, zipData, null));
 
         verify(repositoryConnection).delete(templateFolder);
-    }
-
-    private byte[] createTestZipDataWithSpecificCharset(Charset charset) throws Exception {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (ZipOutputStream zos = new ZipOutputStream(baos, charset)) {
-            ZipEntry entry = new ZipEntry("test.txt");
-            zos.putNextEntry(entry);
-            zos.write("test content".getBytes(charset));
-            zos.closeEntry();
-        }
-        return baos.toByteArray();
     }
 
     private byte[] createTestZipData() throws Exception {
