@@ -1,13 +1,10 @@
 package ch.sbb.polarion.extension.test_data.rest.controller;
 
 import ch.sbb.polarion.extension.generic.service.PolarionService;
-import ch.sbb.polarion.extension.test_data.service.LiveReportService;
 import ch.sbb.polarion.extension.test_data.service.ModuleService;
 import ch.sbb.polarion.extension.test_data.service.ProjectTemplateService;
-import ch.sbb.polarion.extension.test_data.service.WikiPageService;
 import com.polarion.alm.projects.UserProjectCreationException;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
-import com.polarion.core.util.StringUtils;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -17,7 +14,6 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.PATCH;
@@ -27,7 +23,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -46,16 +41,12 @@ public class TestDataInternalController {
     protected final PolarionService polarionService;
     private final ModuleService moduleService;
     private final ProjectTemplateService projectTemplateService;
-    private final LiveReportService liveReportService;
-    private final WikiPageService wikiPageService;
 
     @SuppressWarnings("unused")
     public TestDataInternalController() {
         polarionService = new PolarionService();
         moduleService = new ModuleService();
         projectTemplateService = new ProjectTemplateService();
-        liveReportService = new LiveReportService();
-        wikiPageService = new WikiPageService();
     }
 
     @POST
@@ -221,120 +212,5 @@ public class TestDataInternalController {
                     .entity(e.getMessage())
                     .build();
         }
-    }
-
-    @POST
-    @Path("/projects/{projectId}/spaces/{spaceId}/wiki/{name}")
-    @Operation(summary = "Create a new wiki page",
-            responses = {
-                    @ApiResponse(responseCode = "201", description = "Wiki page created successfully"),
-                    @ApiResponse(responseCode = "409", description = "Wiki page with this name already exists")
-            }
-    )
-    public Response createWikiPage(@PathParam("projectId") String projectId, @PathParam("spaceId") String spaceId, @PathParam("name") String name) {
-        polarionService.callPrivileged(() -> wikiPageService.createWikiPage(projectId, spaceId, name));
-
-        URI location = UriBuilder.fromPath(httpServletRequest.getRequestURI()).build();
-        return Response.created(location).build();
-    }
-
-    @DELETE
-    @Path("/projects/{projectId}/spaces/{spaceId}/wiki/{name}")
-    @Operation(summary = "Delete wiki page", responses = @ApiResponse(responseCode = "204", description = "WikiPage removed"))
-    public Response deleteWikiPage(@PathParam("projectId") String projectId, @PathParam("spaceId") String spaceId, @PathParam("name") String name) {
-        polarionService.callPrivileged(() -> {
-                    wikiPageService.deleteWikiPage(projectId, spaceId, name);
-                    return null;
-                }
-        );
-        return Response.noContent().build();
-    }
-
-    @POST
-    @Path("/spaces/{spaceId}/wiki/{name}")
-    @Operation(summary = "Create a new wiki page in global repository",
-            responses = {
-                    @ApiResponse(responseCode = "201", description = "Wiki page created successfully"),
-                    @ApiResponse(responseCode = "409", description = "Wiki page with this name already exists")
-            }
-    )
-    public Response createWikiPageInGlobalRepository(@PathParam("spaceId") String spaceId, @PathParam("name") String name) {
-        return createWikiPage(null, spaceId, name);
-    }
-
-    @DELETE
-    @Path("/spaces/{spaceId}/wiki/{name}")
-    @Operation(summary = "Delete wiki page from global repository", responses = @ApiResponse(responseCode = "204", description = "WikiPage removed"))
-    public Response deleteWikiPageFromGlobalRepository(@PathParam("spaceId") String spaceId, @PathParam("name") String name) {
-        return deleteWikiPage(null, spaceId, name);
-    }
-
-    @POST
-    @Consumes({MediaType.TEXT_PLAIN, MediaType.TEXT_HTML})
-    @Path("/projects/{projectId}/spaces/{spaceId}/report/{name}")
-    @Operation(summary = "Create a new live report",
-            responses = {
-                    @ApiResponse(responseCode = "201", description = "Live report created successfully"),
-                    @ApiResponse(responseCode = "409", description = "Live report with this name already exists")
-            }
-    )
-    public Response createLiveReport(@PathParam("projectId") String projectId,
-                                     @PathParam("spaceId") String spaceId,
-                                     @PathParam("name") String name,
-                                     @Context HttpHeaders headers,
-                                     String content) {
-        String contentType = getMandatoryContentType(headers);
-        polarionService.callPrivileged(() -> TransactionalExecutor.executeInWriteTransaction(transaction ->
-                        liveReportService.createLiveReport(projectId, spaceId, name, contentType, content)
-                )
-        );
-        URI location = UriBuilder.fromPath(httpServletRequest.getRequestURI()).build();
-        return Response.created(location).build();
-    }
-
-    @DELETE
-    @Path("/projects/{projectId}/spaces/{spaceId}/report/{name}")
-    @Operation(summary = "Delete live report",
-            responses = @ApiResponse(responseCode = "204", description = "Live report removed")
-    )
-    public Response deleteLiveReport(@PathParam("projectId") String projectId, @PathParam("spaceId") String spaceId, @PathParam("name") String name) {
-        polarionService.callPrivileged(() -> TransactionalExecutor.executeInWriteTransaction(transaction -> {
-                    liveReportService.deleteLiveReport(transaction, projectId, spaceId, name);
-                    return null;
-                })
-        );
-        return Response.noContent().build();
-    }
-
-    @POST
-    @Path("/spaces/{spaceId}/report/{name}")
-    @Consumes({MediaType.TEXT_PLAIN, MediaType.TEXT_HTML})
-    @Operation(summary = "Create a new live report in global repository",
-            responses = {
-                    @ApiResponse(responseCode = "201", description = "Live report created successfully"),
-                    @ApiResponse(responseCode = "409", description = "Live report with this name already exists")
-            }
-    )
-    public Response createLiveReportInGlobalRepository(@PathParam("spaceId") String spaceId,
-                                                       @PathParam("name") String name,
-                                                       @Context HttpHeaders headers,
-                                                       String content) {
-
-        return createLiveReport(null, spaceId, name, headers, content);
-    }
-
-    @DELETE
-    @Path("/spaces/{spaceId}/report/{name}")
-    @Operation(summary = "Delete live report from global repository", responses = @ApiResponse(responseCode = "204", description = "Live report removed"))
-    public Response deleteLiveReportFromGlobalRepository(@PathParam("spaceId") String spaceId, @PathParam("name") String name) {
-        return deleteLiveReport(null, spaceId, name);
-    }
-
-    private String getMandatoryContentType(HttpHeaders headers) {
-        String contentType = headers.getHeaderString(HttpHeaders.CONTENT_TYPE);
-        if (StringUtils.isEmpty(contentType)) {
-            throw new IllegalArgumentException("'ContentType' header should be provided");
-        }
-        return contentType;
     }
 }
