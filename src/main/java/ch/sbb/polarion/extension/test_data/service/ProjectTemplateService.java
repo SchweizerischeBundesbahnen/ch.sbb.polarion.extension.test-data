@@ -31,7 +31,7 @@ public class ProjectTemplateService {
 
     protected static final ILocation TEMPLATES_ROOT_REPO =
             Location.getLocationWithRepository(IRepositoryService.DEFAULT, "/.polarion/projects/templates/");
-    private static final Charset FALLBACK_CHARSET = Charset.forName("CP437");
+    protected static final Charset FALLBACK_CHARSET = Charset.forName("CP437");
     protected static final String TEMPLATE_HASH_FILE = ".templatehash";
 
     private final IRepositoryService repositoryService;
@@ -62,8 +62,6 @@ public class ProjectTemplateService {
             if (canProcessZip(zipData, FALLBACK_CHARSET)) {
                 saveZipProjectTemplates(templateId, zipData, templateHash, FALLBACK_CHARSET);
             }
-        } catch (TemplateProcessingException e) {
-            throw e;
         } catch (Exception e) {
             throw new TemplateProcessingException("Failed to save project template: " + templateId, e);
         }
