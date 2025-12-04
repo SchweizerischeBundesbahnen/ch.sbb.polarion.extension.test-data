@@ -77,8 +77,8 @@ public class ProjectTemplateService {
         validateProjectId(projectId);
 
         String path = StringUtils.isEmpty(projectGroup)
-                ? "/" + projectId
-                : "/" + projectGroup + "/" + projectId;
+                ? String.format("/%s", projectId)
+                : String.format("/%s/%s", projectGroup, projectId);
 
         ILocation projectLocation = Location.getLocationWithRepository(IRepositoryService.DEFAULT, path);
 
