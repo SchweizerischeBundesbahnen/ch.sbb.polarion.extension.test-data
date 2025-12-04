@@ -615,7 +615,6 @@ class ProjectTemplateServiceTest {
     @Test
     void testDownloadProjectWithMultipleFiles() {
         String projectId = "testProject";
-        ILocation projectLocation = mock(ILocation.class);
         ILocation file1 = mock(ILocation.class);
         ILocation file2 = mock(ILocation.class);
         ILocation relLoc1 = mock(ILocation.class);
