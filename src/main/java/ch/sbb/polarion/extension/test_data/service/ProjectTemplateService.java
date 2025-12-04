@@ -163,7 +163,7 @@ public class ProjectTemplateService {
                 connection.create(templateHashLocation, inputStream);
             }
         } catch (IOException e) {
-            throw new TemplateProcessingException("Failed to save template hash for template: " + templateFolder.getLocationPath(), e);
+            throw new TemplateProcessingException("Failed to save template hash for template: " + templateFolder.getLastComponent(), e);
         }
     }
 

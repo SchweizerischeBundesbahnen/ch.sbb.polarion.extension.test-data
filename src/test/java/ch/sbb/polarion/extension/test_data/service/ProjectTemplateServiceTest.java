@@ -219,6 +219,7 @@ class ProjectTemplateServiceTest {
                 () -> service.saveProjectTemplate(templateId, inputStream, null));
     }
 
+    @Test
     void testDownloadProjectSuccess() {
         String projectId = "testProject";
         ILocation projectLocation = mock(ILocation.class);
@@ -402,7 +403,7 @@ class ProjectTemplateServiceTest {
     }
 
     @Test
-    void testCleanupTemplateFolder_ExistsAndDeleted() {
+    void testCleanupTemplateFolderExistsAndDeleted() {
         ILocation templateFolder = mock(ILocation.class);
 
         when(repositoryConnection.exists(templateFolder)).thenReturn(true);
@@ -443,7 +444,7 @@ class ProjectTemplateServiceTest {
     }
 
     @Test
-    void testCleanupTemplateFolder_ExistsThrowsException() {
+    void testCleanupTemplateFolderExistsThrowsException() {
         ILocation templateFolder = mock(ILocation.class);
 
         when(repositoryConnection.exists(templateFolder)).thenThrow(new RuntimeException("Connection error"));
