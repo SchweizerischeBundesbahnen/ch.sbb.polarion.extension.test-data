@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.jetbrains.annotations.Nullable;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -175,6 +176,42 @@ public class TestDataInternalController {
         } catch (ProjectTemplateService.TemplateProcessingException e) {
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity("Failed to save template due to user project creation error: " + e.getMessage())
+                    .build();
+        }
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @Path("/templates/{projectId}/download")
+    @Operation(
+            summary = "Download a zipped project template",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Template successfully downloaded"),
+                    @ApiResponse(responseCode = "404", description = "Template not found"),
+                    @ApiResponse(responseCode = "400", description = "Invalid project ID")
+            }
+    )
+    public Response downloadProjectTemplate(@PathParam("projectId") String projectId,
+                                            @QueryParam("projectGroup") @Nullable String projectGroup) {
+
+        try {
+            return polarionService.callPrivileged(() ->
+                    TransactionalExecutor.executeInReadOnlyTransaction(transaction -> {
+                        byte[] zipBytes = projectTemplateService.downloadProject(projectId, projectGroup);
+
+                        return Response.ok(zipBytes)
+                                .header("Content-Disposition", "attachment; filename=" + projectId + ".zip")
+                                .header("Content-Type", MediaType.APPLICATION_OCTET_STREAM)
+                                .build();
+                    })
+            );
+        } catch (ProjectTemplateService.TemplateProcessingException e) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity("Template not found: " + projectId)
+                    .build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(e.getMessage())
                     .build();
         }
     }

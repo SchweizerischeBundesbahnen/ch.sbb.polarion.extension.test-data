@@ -176,6 +176,43 @@
         ]
       }
     },
+    "/api/templates/{projectId}/download": {
+      "get": {
+        "operationId": "downloadProjectTemplate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "projectGroup",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Template successfully downloaded"
+          },
+          "400": {
+            "description": "Invalid project ID"
+          },
+          "404": {
+            "description": "Template not found"
+          }
+        },
+        "summary": "Download a zipped project template",
+        "tags": [
+          "Test Data"
+        ]
+      }
+    },
     "/api/templates/{templateId}/hash": {
       "get": {
         "operationId": "getTemplateHash",
