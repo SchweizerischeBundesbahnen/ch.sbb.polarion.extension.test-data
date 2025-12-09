@@ -176,6 +176,89 @@
         ]
       }
     },
+    "/api/projects/{projectId}/spaces/{spaceId}/documents/{documentName}/large": {
+      "post": {
+        "description": "Creates a document with specified number of pages, each containing large PNG images. Useful for testing document rendering performance with large content.",
+        "operationId": "createLargeDocumentWithImages",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "spaceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "documentName",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pagesCount",
+            "schema": {
+              "default": 200,
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "imagesPerPage",
+            "schema": {
+              "default": 3,
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "imageWidth",
+            "schema": {
+              "default": 1920,
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "imageHeight",
+            "schema": {
+              "default": 1080,
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Large document successfully created"
+          },
+          "400": {
+            "description": "Invalid parameters"
+          },
+          "409": {
+            "description": "Document with this name already exists"
+          }
+        },
+        "summary": "Create large document with PNG images",
+        "tags": [
+          "Test Data"
+        ]
+      }
+    },
     "/api/templates/{projectId}/download": {
       "get": {
         "operationId": "downloadProjectTemplate",

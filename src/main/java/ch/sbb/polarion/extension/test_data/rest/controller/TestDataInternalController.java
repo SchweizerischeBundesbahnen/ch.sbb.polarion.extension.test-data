@@ -3,6 +3,7 @@ package ch.sbb.polarion.extension.test_data.rest.controller;
 import ch.sbb.polarion.extension.generic.service.PolarionService;
 import ch.sbb.polarion.extension.test_data.service.ModuleService;
 import ch.sbb.polarion.extension.test_data.service.ProjectTemplateService;
+import ch.sbb.polarion.extension.test_data.util.DocumentGeneratorUtils;
 import com.polarion.alm.projects.UserProjectCreationException;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -104,6 +105,35 @@ public class TestDataInternalController {
         moduleService.changeDocumentWorkItemDescriptions(projectId, spaceId, documentName, interval);
 
         return Response.noContent().build();
+    }
+
+    @POST
+    @Path("/projects/{projectId}/spaces/{spaceId}/documents/{documentName}/large")
+    @Operation(summary = "Create large document with PNG images",
+            description = "Creates a document with specified number of pages, each containing large PNG images. " +
+                    "Useful for testing document rendering performance with large content.",
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "Large document successfully created"),
+                    @ApiResponse(responseCode = "409", description = "Document with this name already exists"),
+                    @ApiResponse(responseCode = "400", description = "Invalid parameters")
+            }
+    )
+    public Response createLargeDocumentWithImages(
+            @PathParam("projectId") String projectId,
+            @PathParam("spaceId") String spaceId,
+            @PathParam("documentName") String documentName,
+            @QueryParam("pagesCount") @DefaultValue("200") Integer pagesCount,
+            @QueryParam("imagesPerPage") @DefaultValue("3") Integer imagesPerPage,
+            @QueryParam("imageWidth") @DefaultValue("1920") Integer imageWidth,
+            @QueryParam("imageHeight") @DefaultValue("1080") Integer imageHeight
+    ) {
+        moduleService.createLargeDocumentWithImages(
+                projectId, spaceId, documentName,
+                pagesCount, imagesPerPage, imageWidth, imageHeight
+        );
+
+        URI location = UriBuilder.fromPath(httpServletRequest.getRequestURI()).build();
+        return Response.created(location).build();
     }
 
     @POST

@@ -26,6 +26,14 @@ public class TestDataApiController extends TestDataInternalController {
     }
 
     @Override
+    public Response createLargeDocumentWithImages(String projectId, String spaceId, String documentName,
+                                                   Integer pagesCount, Integer imagesPerPage,
+                                                   Integer imageWidth, Integer imageHeight) {
+        return polarionService.callPrivileged(() -> super.createLargeDocumentWithImages(
+                projectId, spaceId, documentName, pagesCount, imagesPerPage, imageWidth, imageHeight));
+    }
+
+    @Override
     public Response saveProjectTemplate(String templateId, String templateHash, FormDataBodyPart file) {
         return polarionService.callPrivileged(() -> super.saveProjectTemplate(templateId, templateHash, file));
     }

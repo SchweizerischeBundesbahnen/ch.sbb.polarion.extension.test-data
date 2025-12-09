@@ -123,6 +123,104 @@ public class ModuleService {
         return DocumentGeneratorUtils.generateRandomHtmlText() + DocumentGeneratorUtils.generateRandomHtmlImages() + DocumentGeneratorUtils.generateRandomWorkItemLinks(documentWorkItems);
     }
 
+    /**
+     * Creates a large document with specified number of pages, each containing large PNG images.
+     *
+     * @param projectId       project ID
+     * @param spaceId         space ID (null for _default)
+     * @param documentName    document name
+     * @param pagesCount      number of pages (Work Items) to create
+     * @param imagesPerPage   number of PNG images per page
+     * @param imageWidth      width of each image in pixels
+     * @param imageHeight     height of each image in pixels
+     * @return created document
+     */
+    @SneakyThrows
+    public @NotNull IModule createLargeDocumentWithImages(
+            @NotNull String projectId,
+            @Nullable String spaceId,
+            @NotNull String documentName,
+            @NotNull Integer pagesCount,
+            @NotNull Integer imagesPerPage,
+            @NotNull Integer imageWidth,
+            @NotNull Integer imageHeight
+    ) {
+        if (pagesCount < 1) {
+            throw new IllegalArgumentException("pagesCount must be a natural number");
+        }
+        if (imagesPerPage < 0) {
+            throw new IllegalArgumentException("imagesPerPage must be non-negative");
+        }
+        if (imageWidth < 1 || imageHeight < 1) {
+            throw new IllegalArgumentException("image dimensions must be positive");
+        }
+
+        IModule document = createDocument(projectId, spaceId, documentName);
+        generateLargeDocumentPages(document, pagesCount, imagesPerPage, imageWidth, imageHeight);
+        return document;
+    }
+
+    private static void generateLargeDocumentPages(
+            @NotNull IModule document,
+            @NotNull Integer pagesCount,
+            @NotNull Integer imagesPerPage,
+            @NotNull Integer imageWidth,
+            @NotNull Integer imageHeight
+    ) {
+        final List<IWorkItem> documentWorkItems = new ArrayList<>(pagesCount);
+
+        for (int i = 0; i < pagesCount; i++) {
+            final int pageNumber = i + 1;
+            // Alternate between headings (chapter markers) and requirements (content pages)
+            final boolean isHeading = (i % 10 == 0); // Every 10th page is a heading
+
+            @NotNull IWorkItem documentWorkItem = ObjectUtils.requireNotNull(TransactionalExecutor.executeInWriteTransaction(writeTransaction -> {
+                document.update();
+                String workItemType = isHeading ? DocumentGeneratorUtils.HEADING : DocumentGeneratorUtils.REQUIREMENT;
+                IWorkItem workItem = document.createWorkItem(workItemType);
+
+                if (isHeading) {
+                    workItem.setTitle("Chapter " + (pageNumber / 10 + 1) + " - " + System.currentTimeMillis());
+                } else {
+                    workItem.setTitle("Page " + pageNumber + " - " + System.currentTimeMillis());
+                    // Generate large content with PNG images
+                    String description = generateLargePageContent(documentWorkItems, imagesPerPage, imageWidth, imageHeight);
+                    workItem.setDescription(Text.html(description));
+                }
+
+                workItem.save();
+                document.save();
+                return workItem;
+            }));
+            documentWorkItems.add(documentWorkItem);
+        }
+    }
+
+    private static @NotNull String generateLargePageContent(
+            @NotNull List<IWorkItem> documentWorkItems,
+            @NotNull Integer imagesPerPage,
+            @NotNull Integer imageWidth,
+            @NotNull Integer imageHeight
+    ) {
+        StringBuilder content = new StringBuilder();
+
+        // Add extended text content (5-10 paragraphs per page)
+        content.append(DocumentGeneratorUtils.generateExtendedHtmlText(5 + (int) (Math.random() * 6)));
+
+        // Add large PNG images
+        if (imagesPerPage > 0) {
+            content.append(DocumentGeneratorUtils.generateLargePngImages(imagesPerPage, imageWidth, imageHeight));
+        }
+
+        // Add more text after images
+        content.append(DocumentGeneratorUtils.generateExtendedHtmlText(3 + (int) (Math.random() * 4)));
+
+        // Add work item links
+        content.append(DocumentGeneratorUtils.generateRandomWorkItemLinks(documentWorkItems));
+
+        return content.toString();
+    }
+
     private static @NotNull String getSpace(@Nullable String spaceId) {
         return spaceId == null ? "_default" : spaceId;
     }

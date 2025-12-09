@@ -125,4 +125,56 @@ class ModuleServiceTest {
 
         assertThrows(IllegalArgumentException.class, () -> moduleService.changeDocumentWorkItemDescriptions("projectId", "spaceId", "documentName", 0));
     }
+
+    @Test
+    void testCreateLargeDocumentWithImages() {
+        PolarionService polarionService = mock(PolarionService.class);
+        ModuleService moduleService = new ModuleService(polarionService);
+
+        ITrackerProject trackerProject = mock(ITrackerProject.class);
+        when(polarionService.getTrackerProject("projectId")).thenReturn(trackerProject);
+        when(trackerProject.getId()).thenReturn("projectId");
+        IEnumeration<ILinkRoleOpt> linkRoleEnumeration = mock(IEnumeration.class);
+        ILinkRoleOpt linkRoleOpt = mock(ILinkRoleOpt.class);
+        when(linkRoleEnumeration.wrapOption("parent")).thenReturn(linkRoleOpt);
+        when(trackerProject.getWorkItemLinkRoleEnum()).thenReturn(linkRoleEnumeration);
+
+        IModule module = mock(IModule.class);
+        when(module.createWorkItem(anyString())).thenReturn(mock(IWorkItem.class));
+
+        ITrackerService trackerService = mock(ITrackerService.class);
+        IModuleManager moduleManager = mock(IModuleManager.class);
+        when(moduleManager.createModule(eq(trackerProject), any(), eq("largeDoc"), eq(null), eq(linkRoleOpt), eq(false))).thenReturn(module);
+
+        when(trackerService.getModuleManager()).thenReturn(moduleManager);
+        when(polarionService.getTrackerService()).thenReturn(trackerService);
+
+        IModule createdModule = moduleService.createLargeDocumentWithImages(
+                "projectId", "spaceId", "largeDoc",
+                10, 2, 800, 600
+        );
+        assertNotNull(createdModule);
+    }
+
+    @Test
+    void testCreateLargeDocumentWithImagesValidation() {
+        PolarionService polarionService = mock(PolarionService.class);
+        ModuleService moduleService = new ModuleService(polarionService);
+
+        // Test invalid pagesCount
+        assertThrows(IllegalArgumentException.class, () ->
+                moduleService.createLargeDocumentWithImages("projectId", "spaceId", "doc", 0, 2, 800, 600));
+
+        // Test invalid imagesPerPage
+        assertThrows(IllegalArgumentException.class, () ->
+                moduleService.createLargeDocumentWithImages("projectId", "spaceId", "doc", 10, -1, 800, 600));
+
+        // Test invalid imageWidth
+        assertThrows(IllegalArgumentException.class, () ->
+                moduleService.createLargeDocumentWithImages("projectId", "spaceId", "doc", 10, 2, 0, 600));
+
+        // Test invalid imageHeight
+        assertThrows(IllegalArgumentException.class, () ->
+                moduleService.createLargeDocumentWithImages("projectId", "spaceId", "doc", 10, 2, 800, 0));
+    }
 }

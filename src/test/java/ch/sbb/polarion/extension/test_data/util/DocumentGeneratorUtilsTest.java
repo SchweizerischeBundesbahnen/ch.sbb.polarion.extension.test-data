@@ -3,6 +3,10 @@ package ch.sbb.polarion.extension.test_data.util;
 import com.polarion.alm.tracker.model.IWorkItem;
 import org.junit.jupiter.api.Test;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -79,5 +83,90 @@ class DocumentGeneratorUtilsTest {
             assertThat(link).contains("data-item-id=");
             assertThat(link).contains("href=\"/polarion/#/project/");
         }
+    }
+
+    @Test
+    void generateRandomPngImage() throws IOException {
+        int width = 800;
+        int height = 600;
+
+        byte[] pngBytes = DocumentGeneratorUtils.generateRandomPngImage(width, height);
+
+        assertNotNull(pngBytes);
+        assertTrue(pngBytes.length > 0);
+
+        // Verify it's a valid PNG image
+        BufferedImage image = ImageIO.read(new ByteArrayInputStream(pngBytes));
+        assertNotNull(image);
+        assertEquals(width, image.getWidth());
+        assertEquals(height, image.getHeight());
+    }
+
+    @Test
+    void generateLargePngImages() {
+        int imageCount = 2;
+        int imageWidth = 400;
+        int imageHeight = 300;
+
+        String html = DocumentGeneratorUtils.generateLargePngImages(imageCount, imageWidth, imageHeight);
+
+        assertNotNull(html);
+        assertThat(html).contains("data:image/png;base64,");
+
+        // Count the number of images
+        long count = html.split("<p><img").length - 1;
+        assertEquals(imageCount, count);
+
+        // Verify width and height attributes
+        assertThat(html).contains("width=\"" + imageWidth + "\"");
+        assertThat(html).contains("height=\"" + imageHeight + "\"");
+    }
+
+    @Test
+    void generateLargePngImagesWithZeroCount() {
+        String html = DocumentGeneratorUtils.generateLargePngImages(0, 100, 100);
+        assertEquals("", html);
+    }
+
+    @Test
+    void generateExtendedHtmlText() {
+        int paragraphs = 5;
+
+        String html = DocumentGeneratorUtils.generateExtendedHtmlText(paragraphs);
+
+        assertNotNull(html);
+        assertThat(html).contains("<p>");
+        assertThat(html).contains("</p>");
+
+        // Count paragraphs
+        long count = html.split("<p>").length - 1;
+        assertEquals(paragraphs, count);
+
+        // Check for formatting tags
+        boolean hasFormatting = html.contains("<strong>") || html.contains("<em>") || html.contains("<u>");
+        assertTrue(hasFormatting);
+    }
+
+    @Test
+    void generateExtendedHtmlTextWithZeroParagraphs() {
+        String html = DocumentGeneratorUtils.generateExtendedHtmlText(0);
+        assertEquals("", html);
+    }
+
+    @Test
+    void generateRandomPngImageLargeSize() throws IOException {
+        // Test with large Full HD dimensions
+        int width = 1920;
+        int height = 1080;
+
+        byte[] pngBytes = DocumentGeneratorUtils.generateRandomPngImage(width, height);
+
+        assertNotNull(pngBytes);
+        assertTrue(pngBytes.length > 10000); // Large image should have significant size
+
+        BufferedImage image = ImageIO.read(new ByteArrayInputStream(pngBytes));
+        assertNotNull(image);
+        assertEquals(width, image.getWidth());
+        assertEquals(height, image.getHeight());
     }
 }
