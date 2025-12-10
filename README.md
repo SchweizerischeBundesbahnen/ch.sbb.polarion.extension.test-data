@@ -17,7 +17,7 @@ All the functionality is exposed via REST API, no UI is provided.
 
 > [!IMPORTANT]
 > Starting from version 2.0.0 only latest version of Polarion is supported.
-> Right now it is Polarion 2506.
+> Right now it is Polarion 2512.
 
 ## Build
 
