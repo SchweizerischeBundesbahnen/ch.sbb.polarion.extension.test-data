@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.0.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/compare/v3.1.0...v4.0.0) (2026-01-09)
+
+
+### ⚠ BREAKING CHANGES
+
+* polarion 2512 support ([#30](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/issues/30))
+
+### Features
+
+* generic v12.1.0 ([#31](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/issues/31)) ([85c71c0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/commit/85c71c06bd6964ca497de4aa54f2c61999d31b53))
+* polarion 2512 support ([#30](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/issues/30)) ([8472a55](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/commit/8472a55c82fff8b9c51573aa884111c5ce2ba276))
+
 ## [3.1.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/compare/v3.0.1...v3.1.0) (2025-12-05)
 
 
