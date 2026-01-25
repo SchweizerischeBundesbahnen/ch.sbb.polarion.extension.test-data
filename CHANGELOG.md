@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.0.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/compare/v4.0.0...v4.0.1) (2026-01-25)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v13.1.0 ([495ab4f](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/commit/495ab4fc8ca241474dc20757715b4e925477f073))
+
 ## [4.0.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/compare/v3.1.0...v4.0.0) (2026-01-09)
 
 
