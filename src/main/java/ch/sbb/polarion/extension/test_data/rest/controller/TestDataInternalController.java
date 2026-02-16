@@ -13,6 +13,7 @@ import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.jetbrains.annotations.Nullable;
 
+import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -30,6 +31,7 @@ import javax.ws.rs.core.UriBuilder;
 import java.io.InputStream;
 import java.net.URI;
 
+@Singleton
 @Tag(name = "Test Data")
 @Hidden
 @Path("/internal")

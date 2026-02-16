@@ -11,10 +11,10 @@ public class TestDataRestApplication extends GenericRestApplication {
 
     @Override
     @NotNull
-    protected Set<Object> getExtensionControllerSingletons() {
+    protected Set<Class<?>> getExtensionControllerClasses() {
         return Set.of(
-                new TestDataApiController(),
-                new TestDataInternalController()
+                TestDataApiController.class,
+                TestDataInternalController.class
         );
     }
 }

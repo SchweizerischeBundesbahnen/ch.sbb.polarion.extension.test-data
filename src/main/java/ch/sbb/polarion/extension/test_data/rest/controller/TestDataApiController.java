@@ -3,9 +3,11 @@ package ch.sbb.polarion.extension.test_data.rest.controller;
 import ch.sbb.polarion.extension.generic.rest.filter.Secured;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 
+import javax.inject.Singleton;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 
+@Singleton
 @Secured
 @Path("/api")
 public class TestDataApiController extends TestDataInternalController {
