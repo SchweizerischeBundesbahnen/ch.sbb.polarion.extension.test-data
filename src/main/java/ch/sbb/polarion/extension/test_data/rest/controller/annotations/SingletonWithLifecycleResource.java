@@ -1,0 +1,34 @@
+package ch.sbb.polarion.extension.test_data.rest.controller.annotations;
+
+import io.swagger.v3.oas.annotations.Hidden;
+
+import javax.annotation.PostConstruct;
+import javax.inject.Singleton;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
+
+@Singleton
+@Hidden
+@Path("/internal/annotations/singleton-lifecycle")
+public class SingletonWithLifecycleResource {
+
+    private final String instanceId = UUID.randomUUID().toString();
+    private final AtomicInteger callCount = new AtomicInteger(0);
+    private boolean initialized = false;
+
+    @PostConstruct
+    void init() {
+        initialized = true;
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public String get() {
+        int count = callCount.incrementAndGet();
+        return "{\"instanceId\":\"" + instanceId + "\",\"initialized\":" + initialized + ",\"callCount\":" + count + "}";
+    }
+}
