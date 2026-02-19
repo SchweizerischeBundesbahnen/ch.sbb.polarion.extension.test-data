@@ -5,7 +5,7 @@
     <parent>
         <groupId>ch.sbb.polarion.extensions</groupId>
         <artifactId>ch.sbb.polarion.extension.generic</artifactId>
-        <version>14.0.0</version>
+        <version>14.1.0</version>
     </parent>
 
     <artifactId>ch.sbb.polarion.extension.test-data</artifactId>
@@ -48,6 +48,7 @@
         <maven-jar-plugin.Automatic-Module-Name>ch.sbb.polarion.extension.test_data</maven-jar-plugin.Automatic-Module-Name>
 
         <web.app.name>${maven-jar-plugin.Extension-Context}</web.app.name>
+
     </properties>
 
     <dependencies>
