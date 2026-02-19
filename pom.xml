@@ -48,6 +48,7 @@
         <maven-jar-plugin.Automatic-Module-Name>ch.sbb.polarion.extension.test_data</maven-jar-plugin.Automatic-Module-Name>
 
         <web.app.name>${maven-jar-plugin.Extension-Context}</web.app.name>
+
     </properties>
 
     <dependencies>
