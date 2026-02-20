@@ -29,7 +29,6 @@ public class PreDestroyResource {
         int destroyedCountBefore = destroyedCount.get();
         int destroyedCountAfter = destroyedCountBefore + 1;
         return "{\"instanceId\":\"" + instanceId + "\"," +
-                "\"destroyedCount\":" + destroyedCountBefore + "," +
                 "\"destroyedCountBefore\":" + destroyedCountBefore + "," +
                 "\"destroyedCountAfter\":" + destroyedCountAfter + "}";
     }
