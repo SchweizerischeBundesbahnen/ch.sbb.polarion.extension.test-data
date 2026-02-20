@@ -5,6 +5,7 @@ import ch.sbb.polarion.extension.test_data.rest.controller.TestDataApiController
 import ch.sbb.polarion.extension.test_data.rest.controller.TestDataInternalController;
 import ch.sbb.polarion.extension.test_data.rest.controller.annotations.InjectResource;
 import ch.sbb.polarion.extension.test_data.rest.controller.annotations.PostConstructResource;
+import ch.sbb.polarion.extension.test_data.rest.controller.annotations.PreDestroyResource;
 import ch.sbb.polarion.extension.test_data.rest.controller.annotations.RequestScopedResource;
 import ch.sbb.polarion.extension.test_data.rest.controller.annotations.SingletonResource;
 import ch.sbb.polarion.extension.test_data.rest.controller.annotations.SingletonWithLifecycleResource;
@@ -24,6 +25,7 @@ public class TestDataRestApplication extends GenericRestApplication {
                 SingletonResource.class,
                 RequestScopedResource.class,
                 PostConstructResource.class,
+                PreDestroyResource.class,
                 SingletonWithLifecycleResource.class,
                 InjectResource.class
         );
