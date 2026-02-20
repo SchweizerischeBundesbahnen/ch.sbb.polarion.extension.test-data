@@ -26,6 +26,11 @@ public class PreDestroyResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public String get() {
-        return "{\"instanceId\":\"" + instanceId + "\",\"destroyedCount\":" + destroyedCount.get() + "}";
+        int destroyedCountBefore = destroyedCount.get();
+        int destroyedCountAfter = destroyedCountBefore + 1;
+        return "{\"instanceId\":\"" + instanceId + "\"," +
+                "\"destroyedCount\":" + destroyedCountBefore + "," +
+                "\"destroyedCountBefore\":" + destroyedCountBefore + "," +
+                "\"destroyedCountAfter\":" + destroyedCountAfter + "}";
     }
 }
