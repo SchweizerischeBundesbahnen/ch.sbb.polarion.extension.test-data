@@ -18,7 +18,7 @@ public class SingletonWithLifecycleResource {
 
     private final String instanceId = UUID.randomUUID().toString();
     private final AtomicInteger callCount = new AtomicInteger(0);
-    private boolean initialized = false;
+    private volatile boolean initialized = false;
 
     @PostConstruct
     void init() {
