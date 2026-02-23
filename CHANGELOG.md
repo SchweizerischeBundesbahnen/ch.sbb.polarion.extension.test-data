@@ -1,5 +1,21 @@
 # Changelog
 
+## [4.1.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/compare/v4.0.0...v4.1.0) (2026-02-20)
+
+
+### Features
+
+* add annotation-based REST resources for internal testing ([#39](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/issues/39)) ([8aa356c](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/commit/8aa356cbcb46fb53c4effd2921ec4a9cdc77500b)), closes [#38](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/issues/38)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v13.1.0 ([495ab4f](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/commit/495ab4fc8ca241474dc20757715b4e925477f073))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v13.2.0 ([657399b](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/commit/657399bff452220544e186a9bdfb628ba9e9134e))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v13.2.1 ([29b8972](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/commit/29b8972d904d93a53612cc7924d4cfca9b642099))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v14.1.0 ([2a89aed](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/commit/2a89aedb37137f59974bcbdcf023b9c99f915f73))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v14.1.0 ([#37](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/issues/37)) ([ea1e990](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/commit/ea1e9908e6574e1523b724bac5542c0656c633f3))
+
 ## [4.0.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/compare/v3.1.0...v4.0.0) (2026-01-09)
 
 
