@@ -130,12 +130,19 @@ mark_done() { touch "$STATE_DIR/$1.done"; }
 
 # api <method> <path> [json-body] [extra-curl-args...]
 # Retries on transient 5xx/network failures, returns response body on stdout, http status on stderr.
+# Tunable per call via env vars:
+#   API_MAX_ATTEMPTS  number of attempts including the first (default 5)
+#   API_MAX_TIME      curl --max-time in seconds (default 7200 = 2h)
+# Set API_MAX_ATTEMPTS=1 for endpoints where the server cannot tell a duplicate
+# from a fresh request (e.g. one-shot bulk endpoints that grind for tens of minutes).
 api() {
   local method="$1"; shift
   local path="$1"; shift
   local body=""
   if [ "$#" -gt 0 ]; then body="$1"; shift; fi
-  local attempt=0 max=5 delay=2 status
+  local max="${API_MAX_ATTEMPTS:-5}"
+  local max_time="${API_MAX_TIME:-7200}"
+  local attempt=0 delay=2 status
   local tmp; tmp="$(mktemp)"
   while true; do
     attempt=$((attempt + 1))
@@ -144,6 +151,7 @@ api() {
         -H "Authorization: Bearer $APP_TOKEN" \
         -H 'Content-Type: application/json' \
         -H 'Accept: application/json' \
+        --max-time "$max_time" \
         -X "$method" "$API$path" \
         --data-binary "$body" \
         "$@" || echo 000)
@@ -151,6 +159,7 @@ api() {
       status=$(curl -sS -o "$tmp" -w '%{http_code}' \
         -H "Authorization: Bearer $APP_TOKEN" \
         -H 'Accept: application/json' \
+        --max-time "$max_time" \
         -X "$method" "$API$path" \
         "$@" || echo 000)
     fi
@@ -243,7 +252,10 @@ step_cross_doc_links() {
   local docs body created
   docs="$(build_documents_json)"
   body="{\"documents\":$docs,\"linksPerWorkItem\":$LINKS_PER_WI,\"linkRole\":\"$LINK_ROLE\"}"
-  created="$(api POST "/projects/$PROJECT_ID/cross-document-links" "$body")"
+  # No retry: a long-running bulk endpoint whose server-side work is not
+  # cancellable by client retry. A retried POST kicks off a parallel duplicate
+  # transaction on the server instead of replacing the first one.
+  created="$(API_MAX_ATTEMPTS=1 api POST "/projects/$PROJECT_ID/cross-document-links" "$body")"
   log "  created links: $created"
   mark_done "step-cross-doc-links"
 }
