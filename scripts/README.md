@@ -1,13 +1,52 @@
 # Bulk test-data generation script
 
-`bulk-generate.sh` drives the test-data extension REST API to populate a Polarion project with a large amount of synthetic data:
+`bulk-generate.sh` drives the test-data extension REST API to populate a Polarion project with a large amount of synthetic data.
 
-- **N documents** × **M workitems** per document (intra-document links + images included)
-- **K revision passes** per document — each pass calls `change-wi-descriptions?interval=1`, producing ~M revisions per pass
-- **Cross-document workitem links** between every document and the rest
-- **Linked-revision references** from the first 10 documents to the captured baseline revisions
-- **3 baselines** (`after-initial-creation`, `mid-after-pass-1`, `final`)
-- **2 baseline collections** (`collection-initial-q1`, `collection-final-h1`)
+## What it produces
+
+For a default profile (`DOC_COUNT=100`, `WI_PER_DOC=500`, `REVISION_PASSES=3`):
+
+- 100 documents, each with 500 workitems (intra-document links and SVG images included)
+- ~2000–2500 SVN revisions per document
+- ~100 000 cross-document workitem links
+- 3 project baselines: `after-initial-creation`, `mid-after-pass-1`, `final`
+- 2 baseline collections: `collection-initial-q1` (25 docs at initial baseline), `collection-final-h1` (50 docs at final baseline)
+- Linked-revision references on the first 10 documents pointing to the 3 baseline revisions
+
+## Algorithm
+
+The script executes the steps below sequentially. Every step writes a checkpoint marker to `$STATE_DIR`; re-running after an interruption resumes from the first incomplete step. Per-document work inside steps 1 and 4 is parallelized across `DOC_PARALLELISM` workers.
+
+1. **Create documents** — `POST /projects/{p}/spaces/{s}/documents/{name}?quantity=WI_PER_DOC` for each `doc_001..doc_NNN`. For every workitem the server commits twice (once for `workItem.save()`, once for `document.save()`), producing **~2× WI_PER_DOC initial revisions** per document. Intra-document workitem links and SVG images are generated on the server.
+
+2. **Cross-document workitem links** — `POST /projects/{p}/cross-document-links` with the full document list. For every workitem in every listed document the server adds `LINKS_PER_WI` links to random workitems in **other** documents (role: `LINK_ROLE`, default `relates_to`). One SVN commit per source workitem-batch.
+
+3. **Baseline `after-initial-creation`** — `POST /projects/{p}/baselines/after-initial-creation`. The server resolves the current repository HEAD, calls `IBaselinesManager.createBaseline(name, description, revision, user)`, explicitly saves the baseline, and returns `{name, revision}`. The script captures the revision into `$STATE_DIR/baseline-*.rev` for later steps.
+
+4. **Revision passes** (×`REVISION_PASSES`) — for each pass `p ∈ 1..REVISION_PASSES` and each document, call `PATCH /projects/{p}/spaces/{s}/documents/{name}/change-wi-descriptions?interval=1`. The server iterates all workitems of the document and rewrites their title/description; **each workitem save = one SVN commit = one revision**. One pass therefore produces ~`WI_PER_DOC` revisions per document. Between pass 1 and the rest, baseline **`mid-after-pass-1`** is created.
+
+5. **Baseline `final`** — same flow as step 3, taken after all revision passes complete.
+
+6. **Linked revisions** — for the first `min(10, DOC_COUNT)` documents, `POST .../linked-revisions` with the three captured baseline revisions. Per request, the server picks `workItemsPerRevision=3` random workitems and attaches each revision via `IWorkItem.addLinkedRevision(repositoryName=null, revision)`. This is how individual workitems get "Linked Revisions" pointing at fixed baseline states.
+
+7. **Collections** — `POST /projects/{p}/collections/{name}` twice:
+   - `collection-initial-q1` — first `min(25, DOC_COUNT)` documents pinned at `after-initial-creation`
+   - `collection-final-h1`  — first `min(50, DOC_COUNT)` documents pinned at `final`
+
+   Each call resolves each document at its baseline revision via `IDataService.getVersionedInstance(...)`, then calls `IBaselineCollection.addElement(versionedModule)` and saves.
+
+### Revisions math (default profile)
+
+```
+per document = 2 × WI_PER_DOC          (initial create, both saves)
+             + REVISION_PASSES × WI_PER_DOC
+             ≈ 500 × (2 + 3) = 2500 SVN revisions
+
+total commits = DOC_COUNT × per-document
+              ≈ 100 × 2500 = 250 000
+```
+
+Cross-document links, baselines, linked-revisions and collections add a handful of additional commits — negligible against the per-document totals.
 
 ## Prerequisites
 
@@ -40,7 +79,7 @@ Equivalent with CLI flags:
 
 > **Note:** `APP_URL` is the Polarion **server root** (no `/polarion` path). The script appends `/polarion/test-data/rest/api` itself.
 
-Default profile: 100 documents × 500 workitems × 4 revision passes ≈ 2000 revisions per document.
+Default profile: 100 documents × 500 workitems × 3 revision passes ≈ 2000–2500 SVN revisions per document. See [Algorithm](#algorithm) for what happens at each step.
 
 ## Configuration
 
@@ -65,6 +104,6 @@ Each step writes a marker file to `$STATE_DIR`. Re-running the script after an i
 
 ## Scale and timing
 
-100 docs × 500 WI × 4 passes ≈ 200 000 SVN commits. On a single Polarion instance expect hours. The script is built to be safely Ctrl-C-able and resumed.
+Default profile ≈ 250 000 SVN commits (see [Revisions math](#revisions-math-default-profile)). On a single Polarion instance expect 1–2 hours wall-clock with `--parallelism 8`; effective parallel scaling is ~3× rather than the nominal worker count because Polarion serializes commits internally. The script is built to be safely Ctrl-C-able and resumed.
 
-If you need to push the count further (more documents, more revisions), bump `DOC_COUNT`, `REVISION_PASSES`, `DOC_PARALLELISM`. Note that very high `DOC_PARALLELISM` will saturate the Polarion instance — start with 4 and watch CPU/IO before increasing.
+If you need to push the count further (more documents, more revisions), bump `DOC_COUNT`, `REVISION_PASSES`, `DOC_PARALLELISM`. Note that very high `DOC_PARALLELISM` will saturate the Polarion instance — start with 4–8 and watch CPU/IO before increasing.
