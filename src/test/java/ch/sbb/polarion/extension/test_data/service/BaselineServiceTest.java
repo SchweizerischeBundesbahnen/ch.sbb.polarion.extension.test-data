@@ -94,6 +94,69 @@ class BaselineServiceTest {
     }
 
     @Test
+    void createBaselineUsesExplicitRevisionWithoutHeadLookup() {
+        PolarionService polarionService = mock(PolarionService.class);
+        ITrackerProject trackerProject = mock(ITrackerProject.class);
+        when(polarionService.getTrackerProject("p")).thenReturn(trackerProject);
+
+        IBaselinesManager baselinesManager = mock(IBaselinesManager.class);
+        when(trackerProject.getBaselinesManager()).thenReturn(baselinesManager);
+        IBaseline baseline = mock(IBaseline.class);
+        when(baseline.getName()).thenReturn("v1");
+        when(baseline.getBaseRevision()).thenReturn("99");
+        when(baselinesManager.createBaseline(eq("v1"), eq(null), eq("99"), any())).thenReturn(baseline);
+
+        BaselineResponse response = new BaselineService(polarionService).createBaseline("p", "v1", null, "99");
+        assertEquals("99", response.revision());
+        // HEAD lookup must be skipped when explicit revision is provided
+        verify(polarionService, org.mockito.Mockito.never()).getReadOnlyConnection(any());
+    }
+
+    @Test
+    void createBaselineFallsBackToResolvedRevisionWhenBaselineReportsNull() throws Exception {
+        PolarionService polarionService = mock(PolarionService.class);
+        ITrackerProject trackerProject = mock(ITrackerProject.class);
+        when(polarionService.getTrackerProject("p")).thenReturn(trackerProject);
+
+        IRepositoryReadOnlyConnection connection = mock(IRepositoryReadOnlyConnection.class);
+        when(connection.getLastRevision(any())).thenReturn("123");
+        when(polarionService.getReadOnlyConnection(any())).thenReturn(connection);
+
+        IBaselinesManager baselinesManager = mock(IBaselinesManager.class);
+        when(trackerProject.getBaselinesManager()).thenReturn(baselinesManager);
+        IBaseline baseline = mock(IBaseline.class);
+        when(baseline.getName()).thenReturn("v1");
+        when(baseline.getBaseRevision()).thenReturn(null);
+        when(baselinesManager.createBaseline(any(), any(), any(), any())).thenReturn(baseline);
+
+        BaselineResponse response = new BaselineService(polarionService).createBaseline("p", "v1", null, "");
+        assertEquals("123", response.revision());
+    }
+
+    @Test
+    void createCollectionSkipsDescriptionWhenBlank() {
+        PolarionService polarionService = mock(PolarionService.class);
+        ITrackerService trackerService = mock(ITrackerService.class);
+        IBaselineCollectionsManager mgr = mock(IBaselineCollectionsManager.class);
+        IBaselineCollection collection = mock(IBaselineCollection.class);
+        when(mgr.createCollection("p")).thenReturn(collection);
+        when(trackerService.getBaselineCollectionsManager()).thenReturn(mgr);
+        when(polarionService.getTrackerService()).thenReturn(trackerService);
+        when(polarionService.getModule("p", "_default", "doc_1", "10")).thenReturn(mock(IModule.class));
+
+        CollectionRequest request = new CollectionRequest("  ", List.of(new CollectionElementRef("_default", "doc_1", "10")));
+        new BaselineService(polarionService).createCollection("p", "rel", request);
+        verify(collection, org.mockito.Mockito.never()).setDescription(any());
+    }
+
+    @Test
+    void createCollectionRejectsBlankName() {
+        BaselineService service = new BaselineService(mock(PolarionService.class));
+        CollectionRequest request = new CollectionRequest("d", List.of(new CollectionElementRef(null, "doc", "1")));
+        assertThrows(IllegalArgumentException.class, () -> service.createCollection("p", "  ", request));
+    }
+
+    @Test
     void createCollectionAddsElementsAndSaves() {
         PolarionService polarionService = mock(PolarionService.class);
         ITrackerService trackerService = mock(ITrackerService.class);

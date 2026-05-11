@@ -96,6 +96,122 @@ class LinksServiceTest {
     }
 
     @Test
+    void createCrossDocumentLinksRejectsNonPositiveLinksPerWorkItem() {
+        LinksService service = new LinksService(mock(PolarionService.class));
+        CrossDocumentLinksRequest request = new CrossDocumentLinksRequest(
+                List.of(new DocumentRef("_default", "a"), new DocumentRef("_default", "b")), 0, "relates_to");
+        assertThrows(IllegalArgumentException.class, () -> service.createCrossDocumentLinks("p", request));
+    }
+
+    @Test
+    void createCrossDocumentLinksRejectsUnknownLinkRole() {
+        PolarionService polarionService = mock(PolarionService.class);
+        ITrackerProject trackerProject = mock(ITrackerProject.class);
+        when(polarionService.getTrackerProject("p")).thenReturn(trackerProject);
+        IEnumeration<ILinkRoleOpt> roleEnum = mock(IEnumeration.class);
+        when(roleEnum.wrapOption("unknown")).thenReturn(null);
+        when(trackerProject.getWorkItemLinkRoleEnum()).thenReturn(roleEnum);
+
+        CrossDocumentLinksRequest request = new CrossDocumentLinksRequest(
+                List.of(new DocumentRef("_default", "a"), new DocumentRef("_default", "b")), 1, "unknown");
+        assertThrows(IllegalArgumentException.class,
+                () -> new LinksService(polarionService).createCrossDocumentLinks("p", request));
+    }
+
+    @Test
+    void createCrossDocumentLinksSkipsDocumentsWithoutWorkItems() {
+        PolarionService polarionService = mock(PolarionService.class);
+        ITrackerProject trackerProject = mock(ITrackerProject.class);
+        when(polarionService.getTrackerProject("p")).thenReturn(trackerProject);
+        IEnumeration<ILinkRoleOpt> roleEnum = mock(IEnumeration.class);
+        ILinkRoleOpt role = mock(ILinkRoleOpt.class);
+        when(roleEnum.wrapOption("relates_to")).thenReturn(role);
+        when(trackerProject.getWorkItemLinkRoleEnum()).thenReturn(roleEnum);
+
+        IModule moduleA = mock(IModule.class);
+        IModule moduleB = mock(IModule.class);
+        when(moduleA.getAllWorkItems()).thenReturn(new ArrayList<>());
+        when(moduleB.getAllWorkItems()).thenReturn(new ArrayList<>());
+        when(polarionService.getModule("p", "_default", "doc_a")).thenReturn(moduleA);
+        when(polarionService.getModule("p", "_default", "doc_b")).thenReturn(moduleB);
+
+        CrossDocumentLinksRequest request = new CrossDocumentLinksRequest(
+                List.of(new DocumentRef("_default", "doc_a"), new DocumentRef("_default", "doc_b")), 1, "relates_to");
+        int created = new LinksService(polarionService).createCrossDocumentLinks("p", request);
+        assertEquals(0, created);
+    }
+
+    @Test
+    void createCrossDocumentLinksDoesNotCountDuplicateAdds() {
+        PolarionService polarionService = mock(PolarionService.class);
+        ITrackerProject trackerProject = mock(ITrackerProject.class);
+        when(polarionService.getTrackerProject("p")).thenReturn(trackerProject);
+        IEnumeration<ILinkRoleOpt> roleEnum = mock(IEnumeration.class);
+        ILinkRoleOpt role = mock(ILinkRoleOpt.class);
+        when(roleEnum.wrapOption("relates_to")).thenReturn(role);
+        when(trackerProject.getWorkItemLinkRoleEnum()).thenReturn(roleEnum);
+
+        IModule moduleA = mock(IModule.class);
+        IModule moduleB = mock(IModule.class);
+        List<IWorkItem> wisA = new ArrayList<>();
+        List<IWorkItem> wisB = new ArrayList<>();
+        for (int i = 0; i < 2; i++) {
+            IWorkItem a = mock(IWorkItem.class);
+            when(a.addLinkedItem(any(), eq(role), eq(null), anyBoolean())).thenReturn(false);
+            wisA.add(a);
+            wisB.add(mock(IWorkItem.class));
+        }
+        when(moduleA.getAllWorkItems()).thenReturn(wisA);
+        when(moduleB.getAllWorkItems()).thenReturn(wisB);
+        when(polarionService.getModule("p", "_default", "doc_a")).thenReturn(moduleA);
+        when(polarionService.getModule("p", "_default", "doc_b")).thenReturn(moduleB);
+
+        CrossDocumentLinksRequest request = new CrossDocumentLinksRequest(
+                List.of(new DocumentRef("_default", "doc_a"), new DocumentRef("_default", "doc_b")), 1, "relates_to");
+        int created = new LinksService(polarionService).createCrossDocumentLinks("p", request);
+        // wisA returns false for every addLinkedItem; wisB defaults to false too -> nothing counted
+        assertEquals(0, created);
+    }
+
+    @Test
+    void addLinkedRevisionsRejectsNonPositiveWorkItemsPerRevision() {
+        LinksService service = new LinksService(mock(PolarionService.class));
+        LinkedRevisionsRequest request = new LinkedRevisionsRequest(List.of("1"), 0, null);
+        assertThrows(IllegalArgumentException.class,
+                () -> service.addLinkedRevisions("p", "_default", "doc", request));
+    }
+
+    @Test
+    void addLinkedRevisionsReturnsZeroWhenDocumentHasNoWorkItems() {
+        PolarionService polarionService = mock(PolarionService.class);
+        IModule module = mock(IModule.class);
+        when(module.getAllWorkItems()).thenReturn(new ArrayList<>());
+        when(polarionService.getModule("p", "_default", "doc")).thenReturn(module);
+
+        int added = new LinksService(polarionService).addLinkedRevisions("p", "_default", "doc",
+                new LinkedRevisionsRequest(List.of("1"), 3, null));
+        assertEquals(0, added);
+    }
+
+    @Test
+    void addLinkedRevisionsSkipsDuplicateAdds() {
+        PolarionService polarionService = mock(PolarionService.class);
+        IModule module = mock(IModule.class);
+        List<IWorkItem> wis = new ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            IWorkItem w = mock(IWorkItem.class);
+            when(w.addLinkedRevision(any(), any())).thenReturn(false);
+            wis.add(w);
+        }
+        when(module.getAllWorkItems()).thenReturn(wis);
+        when(polarionService.getModule("p", "_default", "doc")).thenReturn(module);
+
+        int added = new LinksService(polarionService).addLinkedRevisions("p", "_default", "doc",
+                new LinkedRevisionsRequest(List.of("100"), 2, null));
+        assertEquals(0, added);
+    }
+
+    @Test
     void addLinkedRevisionsValidatesInput() {
         LinksService service = new LinksService(mock(PolarionService.class));
         LinkedRevisionsRequest request = new LinkedRevisionsRequest(List.of(), 1, null);
