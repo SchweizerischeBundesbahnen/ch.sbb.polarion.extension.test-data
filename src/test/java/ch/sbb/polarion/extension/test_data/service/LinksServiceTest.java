@@ -98,8 +98,8 @@ class LinksServiceTest {
     @Test
     void addLinkedRevisionsValidatesInput() {
         LinksService service = new LinksService(mock(PolarionService.class));
-        assertThrows(IllegalArgumentException.class, () -> service.addLinkedRevisions("p", "_default", "doc",
-                new LinkedRevisionsRequest(List.of(), 1, null)));
+        LinkedRevisionsRequest request = new LinkedRevisionsRequest(List.of(), 1, null);
+        assertThrows(IllegalArgumentException.class, () -> service.addLinkedRevisions("p", "_default", "doc", request));
     }
 
     @Test

@@ -73,7 +73,7 @@ public class BaselineService {
         if (name.isBlank()) {
             throw new IllegalArgumentException("Collection name must not be blank");
         }
-        if (request.elements() == null || request.elements().isEmpty()) {
+        if (request.elements().isEmpty()) {
             throw new IllegalArgumentException("At least one collection element is required");
         }
 

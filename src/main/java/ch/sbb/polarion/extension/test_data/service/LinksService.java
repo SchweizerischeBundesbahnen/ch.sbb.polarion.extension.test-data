@@ -35,7 +35,7 @@ public class LinksService {
 
     public int createCrossDocumentLinks(@NotNull String projectId, @NotNull CrossDocumentLinksRequest request) {
         List<DocumentRef> documents = request.documents();
-        if (documents == null || documents.size() < 2) {
+        if (documents.size() < 2) {
             throw new IllegalArgumentException("At least two documents are required to create cross-document links");
         }
         int linksPerWorkItem = request.linksPerWorkItem();
@@ -58,14 +58,10 @@ public class LinksService {
         int totalLinks = 0;
         for (DocumentRef sourceRef : documents) {
             List<IWorkItem> sourceItems = docsToWorkItems.get(sourceRef);
-            if (sourceItems.isEmpty()) {
-                continue;
-            }
             List<DocumentRef> otherDocs = documents.stream().filter(d -> !d.equals(sourceRef)).toList();
-            if (otherDocs.isEmpty()) {
-                continue;
+            if (!sourceItems.isEmpty() && !otherDocs.isEmpty()) {
+                totalLinks += linkSourceDocument(sourceItems, otherDocs, docsToWorkItems, role, linksPerWorkItem);
             }
-            totalLinks += linkSourceDocument(sourceItems, otherDocs, docsToWorkItems, role, linksPerWorkItem);
         }
         return totalLinks;
     }
@@ -98,7 +94,7 @@ public class LinksService {
 
     public int addLinkedRevisions(@NotNull String projectId, @NotNull String spaceId, @NotNull String documentName,
                                   @NotNull LinkedRevisionsRequest request) {
-        if (request.revisions() == null || request.revisions().isEmpty()) {
+        if (request.revisions().isEmpty()) {
             throw new IllegalArgumentException("revisions must not be empty");
         }
         int workItemsPerRevision = request.workItemsPerRevision();

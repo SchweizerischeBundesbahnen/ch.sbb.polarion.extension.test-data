@@ -89,8 +89,8 @@ class BaselineServiceTest {
     @Test
     void createCollectionRejectsEmptyElements() {
         BaselineService service = new BaselineService(mock(PolarionService.class));
-        assertThrows(IllegalArgumentException.class, () -> service.createCollection("p", "c",
-                new CollectionRequest("d", List.of())));
+        CollectionRequest request = new CollectionRequest("d", List.of());
+        assertThrows(IllegalArgumentException.class, () -> service.createCollection("p", "c", request));
     }
 
     @Test
