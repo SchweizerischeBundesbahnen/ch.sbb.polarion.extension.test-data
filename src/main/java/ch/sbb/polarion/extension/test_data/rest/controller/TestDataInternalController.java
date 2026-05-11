@@ -1,12 +1,22 @@
 package ch.sbb.polarion.extension.test_data.rest.controller;
 
 import ch.sbb.polarion.extension.generic.service.PolarionService;
+import ch.sbb.polarion.extension.test_data.rest.model.BaselineResponse;
+import ch.sbb.polarion.extension.test_data.rest.model.CollectionRequest;
+import ch.sbb.polarion.extension.test_data.rest.model.CrossDocumentLinksRequest;
+import ch.sbb.polarion.extension.test_data.rest.model.LinkedRevisionsRequest;
+import ch.sbb.polarion.extension.test_data.service.BaselineService;
+import ch.sbb.polarion.extension.test_data.service.LinksService;
 import ch.sbb.polarion.extension.test_data.service.ModuleService;
 import ch.sbb.polarion.extension.test_data.service.ProjectTemplateService;
 import com.polarion.alm.projects.UserProjectCreationException;
 import com.polarion.alm.shared.api.transaction.TransactionalExecutor;
+import com.polarion.alm.tracker.model.baselinecollection.IBaselineCollection;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
@@ -44,12 +54,16 @@ public class TestDataInternalController {
     protected final PolarionService polarionService;
     private final ModuleService moduleService;
     private final ProjectTemplateService projectTemplateService;
+    private final LinksService linksService;
+    private final BaselineService baselineService;
 
     @SuppressWarnings("unused")
     public TestDataInternalController() {
         polarionService = new PolarionService();
         moduleService = new ModuleService();
         projectTemplateService = new ProjectTemplateService();
+        linksService = new LinksService();
+        baselineService = new BaselineService();
     }
 
     @POST
@@ -216,5 +230,84 @@ public class TestDataInternalController {
                     .entity(e.getMessage())
                     .build();
         }
+    }
+
+    @POST
+    @Path("/projects/{projectId}/cross-document-links")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Generate random workitem links between documents",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Cross-document links successfully created",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                                    schema = @Schema(implementation = Integer.class)))
+            }
+    )
+    public Response createCrossDocumentLinks(
+            @PathParam("projectId") String projectId,
+            @Parameter(required = true) CrossDocumentLinksRequest request
+    ) {
+        int created = linksService.createCrossDocumentLinks(projectId, request);
+        return Response.ok(created).build();
+    }
+
+    @POST
+    @Path("/projects/{projectId}/spaces/{spaceId}/documents/{documentName}/linked-revisions")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Add linked revisions to random workitems of a document",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Linked revisions successfully added",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                                    schema = @Schema(implementation = Integer.class)))
+            }
+    )
+    public Response addLinkedRevisions(
+            @PathParam("projectId") String projectId,
+            @PathParam("spaceId") String spaceId,
+            @PathParam("documentName") String documentName,
+            @Parameter(required = true) LinkedRevisionsRequest request
+    ) {
+        int added = linksService.addLinkedRevisions(projectId, spaceId, documentName, request);
+        return Response.ok(added).build();
+    }
+
+    @POST
+    @Path("/projects/{projectId}/baselines/{baselineName}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Create a project baseline",
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "Baseline successfully created",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                                    schema = @Schema(implementation = BaselineResponse.class)))
+            }
+    )
+    public Response createBaseline(
+            @PathParam("projectId") String projectId,
+            @PathParam("baselineName") String baselineName,
+            @QueryParam("description") String description,
+            @QueryParam("revision") String revision
+    ) {
+        BaselineResponse response = baselineService.createBaseline(projectId, baselineName, description, revision);
+        URI location = UriBuilder.fromPath(httpServletRequest.getRequestURI()).build();
+        return Response.created(location).entity(response).build();
+    }
+
+    @POST
+    @Path("/projects/{projectId}/collections/{collectionName}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Create a baseline collection containing the given documents",
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "Collection successfully created")
+            }
+    )
+    public Response createCollection(
+            @PathParam("projectId") String projectId,
+            @PathParam("collectionName") String collectionName,
+            @Parameter(required = true) CollectionRequest request
+    ) {
+        IBaselineCollection collection = baselineService.createCollection(projectId, collectionName, request);
+        URI location = UriBuilder.fromPath(httpServletRequest.getRequestURI()).build();
+        return Response.created(location).entity(collection.getName()).build();
     }
 }
