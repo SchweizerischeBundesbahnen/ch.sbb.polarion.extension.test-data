@@ -114,8 +114,8 @@ class LinksServiceTest {
 
         CrossDocumentLinksRequest request = new CrossDocumentLinksRequest(
                 List.of(new DocumentRef("_default", "a"), new DocumentRef("_default", "b")), 1, "unknown");
-        assertThrows(IllegalArgumentException.class,
-                () -> new LinksService(polarionService).createCrossDocumentLinks("p", request));
+        LinksService service = new LinksService(polarionService);
+        assertThrows(IllegalArgumentException.class, () -> service.createCrossDocumentLinks("p", request));
     }
 
     @Test
