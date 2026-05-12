@@ -26,6 +26,143 @@
         ]
       }
     },
+    "/api/projects/{projectId}/baselines/{baselineName}": {
+      "post": {
+        "operationId": "createBaseline",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "baselineName",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "description",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaselineResponse"
+                }
+              }
+            },
+            "description": "Baseline successfully created"
+          }
+        },
+        "summary": "Create a project baseline",
+        "tags": [
+          "Test Data"
+        ]
+      }
+    },
+    "/api/projects/{projectId}/collections/{collectionName}": {
+      "post": {
+        "operationId": "createCollection",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "collectionName",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CollectionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Collection successfully created"
+          }
+        },
+        "summary": "Create a baseline collection containing the given documents",
+        "tags": [
+          "Test Data"
+        ]
+      }
+    },
+    "/api/projects/{projectId}/cross-document-links": {
+      "post": {
+        "operationId": "createCrossDocumentLinks",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrossDocumentLinksRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "format": "int32",
+                  "type": "integer"
+                }
+              }
+            },
+            "description": "Cross-document links successfully created"
+          }
+        },
+        "summary": "Generate random workitem links between documents",
+        "tags": [
+          "Test Data"
+        ]
+      }
+    },
     "/api/projects/{projectId}/spaces/{spaceId}/documents/{documentName}": {
       "post": {
         "operationId": "createDocumentWithGeneratedWorkItems",
@@ -176,6 +313,64 @@
         ]
       }
     },
+    "/api/projects/{projectId}/spaces/{spaceId}/documents/{documentName}/linked-revisions": {
+      "post": {
+        "operationId": "addLinkedRevisions",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "spaceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "documentName",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkedRevisionsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "format": "int32",
+                  "type": "integer"
+                }
+              }
+            },
+            "description": "Linked revisions successfully added"
+          }
+        },
+        "summary": "Add linked revisions to random workitems of a document",
+        "tags": [
+          "Test Data"
+        ]
+      }
+    },
     "/api/templates/{projectId}/download": {
       "get": {
         "operationId": "downloadProjectTemplate",
@@ -316,6 +511,18 @@
   },
   "components": {
     "schemas": {
+      "BaselineResponse": {
+        "description": "Information about a created baseline",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "BodyPart": {
         "properties": {
           "contentDisposition": {
@@ -377,6 +584,36 @@
         },
         "type": "object"
       },
+      "CollectionElementRef": {
+        "description": "Reference to a versioned document used as a collection element",
+        "properties": {
+          "documentName": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "spaceId": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "CollectionRequest": {
+        "description": "Request to create a baseline collection",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "elements": {
+            "items": {
+              "$ref": "#/components/schemas/CollectionElementRef"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
       "ContentDisposition": {
         "properties": {
           "creationDate": {
@@ -427,6 +664,46 @@
           },
           "swaggerUiUrl": {
             "description": "Returns the Swagger UI URL for the REST API",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "CrossDocumentLinksRequest": {
+        "description": "Request to generate cross-document workitem links",
+        "properties": {
+          "documents": {
+            "description": "Documents to link between (links go between random pairs)",
+            "items": {
+              "$ref": "#/components/schemas/DocumentRef"
+            },
+            "type": "array"
+          },
+          "linkRole": {
+            "description": "Workitem link role id",
+            "example": "relates_to",
+            "type": "string"
+          },
+          "linksPerWorkItem": {
+            "description": "Number of cross-document links per source workitem",
+            "example": 2,
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "DocumentRef": {
+        "description": "Reference to a document by space and name",
+        "properties": {
+          "documentName": {
+            "description": "Document name",
+            "example": "doc_1",
+            "type": "string"
+          },
+          "spaceId": {
+            "description": "Space identifier",
+            "example": "_default",
             "type": "string"
           }
         },
@@ -537,6 +814,30 @@
           },
           "type": {
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "LinkedRevisionsRequest": {
+        "description": "Request to add linked-revision references to random workitems of a document",
+        "properties": {
+          "comment": {
+            "description": "Comment text for the linked revision entry",
+            "type": "string"
+          },
+          "revisions": {
+            "description": "Repository revisions to attach as linked revisions",
+            "items": {
+              "description": "Repository revisions to attach as linked revisions",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "workItemsPerRevision": {
+            "description": "How many random workitems in the source document each revision is attached to",
+            "example": 5,
+            "format": "int32",
+            "type": "integer"
           }
         },
         "type": "object"
