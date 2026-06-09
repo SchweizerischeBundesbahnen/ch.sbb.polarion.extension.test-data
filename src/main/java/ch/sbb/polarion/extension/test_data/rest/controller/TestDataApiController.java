@@ -4,11 +4,12 @@ import ch.sbb.polarion.extension.generic.rest.filter.Secured;
 import ch.sbb.polarion.extension.test_data.rest.model.CollectionRequest;
 import ch.sbb.polarion.extension.test_data.rest.model.CrossDocumentLinksRequest;
 import ch.sbb.polarion.extension.test_data.rest.model.LinkedRevisionsRequest;
-import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Response;
+
+import java.io.InputStream;
 
 @Singleton
 @Secured
@@ -31,7 +32,7 @@ public class TestDataApiController extends TestDataInternalController {
     }
 
     @Override
-    public Response saveProjectTemplate(String templateId, String templateHash, FormDataBodyPart file) {
+    public Response saveProjectTemplate(String templateId, String templateHash, InputStream file) {
         return polarionService.callPrivileged(() -> super.saveProjectTemplate(templateId, templateHash, file));
     }
 

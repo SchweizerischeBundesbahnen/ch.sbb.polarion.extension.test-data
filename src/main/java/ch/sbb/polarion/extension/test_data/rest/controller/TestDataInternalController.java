@@ -21,7 +21,6 @@ import io.swagger.v3.oas.annotations.media.SchemaProperty;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.jetbrains.annotations.Nullable;
 
@@ -141,7 +140,7 @@ public class TestDataInternalController {
     public Response saveProjectTemplate(
             @PathParam("templateId") String templateId,
             @PathParam("templateHash") String templateHash,
-            @FormDataParam("file") FormDataBodyPart file
+            @FormDataParam("file") InputStream file
     ) {
 
         if (templateId == null || templateId.trim().isEmpty()) {
@@ -155,9 +154,7 @@ public class TestDataInternalController {
         try {
             polarionService.callPrivileged(() -> TransactionalExecutor.executeInWriteTransaction(
                     transaction -> {
-                        InputStream inputStream = file.getValueAs(InputStream.class);
-
-                        projectTemplateService.saveProjectTemplate(templateId, inputStream, templateHash);
+                        projectTemplateService.saveProjectTemplate(templateId, file, templateHash);
                         return null;
                     })
             );
