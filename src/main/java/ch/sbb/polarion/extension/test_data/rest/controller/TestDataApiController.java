@@ -6,9 +6,9 @@ import ch.sbb.polarion.extension.test_data.rest.model.CrossDocumentLinksRequest;
 import ch.sbb.polarion.extension.test_data.rest.model.LinkedRevisionsRequest;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 
-import javax.inject.Singleton;
-import javax.ws.rs.Path;
-import javax.ws.rs.core.Response;
+import jakarta.inject.Singleton;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.core.Response;
 
 @Singleton
 @Secured
