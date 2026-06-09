@@ -17,10 +17,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.media.SchemaProperty;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.jetbrains.annotations.Nullable;
 
@@ -133,14 +132,11 @@ public class TestDataInternalController {
                     @ApiResponse(responseCode = "400", description = "Invalid template data or ID")
             }
     )
-    @RequestBody(content = @Content(
-            mediaType = MediaType.MULTIPART_FORM_DATA,
-            schemaProperties = @SchemaProperty(name = "file", schema = @Schema(type = "string", format = "binary"))
-    ))
     public Response saveProjectTemplate(
             @PathParam("templateId") String templateId,
             @PathParam("templateHash") String templateHash,
-            @FormDataParam("file") InputStream file
+            @Parameter(description = "Project template file", required = true, schema = @Schema(type = "string", format = "binary"))
+            @FormDataParam("file") FormDataBodyPart file
     ) {
 
         if (templateId == null || templateId.trim().isEmpty()) {
@@ -154,7 +150,9 @@ public class TestDataInternalController {
         try {
             polarionService.callPrivileged(() -> TransactionalExecutor.executeInWriteTransaction(
                     transaction -> {
-                        projectTemplateService.saveProjectTemplate(templateId, file, templateHash);
+                        InputStream inputStream = file.getValueAs(InputStream.class);
+
+                        projectTemplateService.saveProjectTemplate(templateId, inputStream, templateHash);
                         return null;
                     })
             );
