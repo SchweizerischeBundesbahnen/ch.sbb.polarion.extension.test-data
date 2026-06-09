@@ -17,27 +17,28 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.SchemaProperty;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.jetbrains.annotations.Nullable;
 
-import javax.inject.Singleton;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.PATCH;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
+import jakarta.inject.Singleton;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.PATCH;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriBuilder;
 import java.io.InputStream;
 import java.net.URI;
 
@@ -132,10 +133,14 @@ public class TestDataInternalController {
                     @ApiResponse(responseCode = "400", description = "Invalid template data or ID")
             }
     )
+    @RequestBody(content = @Content(
+            mediaType = MediaType.MULTIPART_FORM_DATA,
+            schemaProperties = @SchemaProperty(name = "file", schema = @Schema(type = "string", format = "binary"))
+    ))
     public Response saveProjectTemplate(
             @PathParam("templateId") String templateId,
             @PathParam("templateHash") String templateHash,
-            @FormDataParam("file") FormDataBodyPart file
+            @FormDataParam("file") InputStream file
     ) {
 
         if (templateId == null || templateId.trim().isEmpty()) {
@@ -149,9 +154,7 @@ public class TestDataInternalController {
         try {
             polarionService.callPrivileged(() -> TransactionalExecutor.executeInWriteTransaction(
                     transaction -> {
-                        InputStream inputStream = file.getValueAs(InputStream.class);
-
-                        projectTemplateService.saveProjectTemplate(templateId, inputStream, templateHash);
+                        projectTemplateService.saveProjectTemplate(templateId, file, templateHash);
                         return null;
                     })
             );

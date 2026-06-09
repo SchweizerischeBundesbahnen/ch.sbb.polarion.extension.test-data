@@ -26,6 +26,7 @@ import java.util.zip.ZipOutputStream;
 /**
  * Service for managing Polarion project templates.
  * Handles template upload, download, and storage operations.
+ * Extends logic from com.polarion.alm.projects.internal.ProjectTemplateManager
  */
 public class ProjectTemplateService {
 
