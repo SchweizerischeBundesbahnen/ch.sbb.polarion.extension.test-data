@@ -465,10 +465,14 @@
               "schema": {
                 "properties": {
                   "file": {
+                    "description": "Project template file",
                     "format": "binary",
                     "type": "string"
                   }
                 },
+                "required": [
+                  "file"
+                ],
                 "type": "object"
               }
             }
