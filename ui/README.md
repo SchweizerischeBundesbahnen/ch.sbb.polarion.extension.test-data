@@ -65,5 +65,5 @@ under `ui/`. They are check-only and never modify your files.
 `npm run build` emits the bundle to `ui/dist/app` with base path
 `/polarion/test-data-app/ui/app/`. The Maven build (frontend-maven-plugin +
 maven-resources-plugin) runs this automatically and copies the bundle into
-`src/main/resources/webapp/test-data-app/app`, where `AadSynchronizerAppServlet` serves it at
+`src/main/resources/webapp/test-data-app/app`, where `TestDataAppServlet` serves it at
 `/polarion/test-data-app/ui/app/index.html`.
