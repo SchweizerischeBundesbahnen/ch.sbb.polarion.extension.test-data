@@ -16,4 +16,11 @@
                 contextRoot="webapp/test-data-admin">
         </webapp>
     </extension>
+    <extension
+            point="com.polarion.portal.tomcat.webapps">
+        <webapp
+                name="polarion/test-data-app"
+                contextRoot="webapp/test-data-app">
+        </webapp>
+    </extension>
 </plugin>
