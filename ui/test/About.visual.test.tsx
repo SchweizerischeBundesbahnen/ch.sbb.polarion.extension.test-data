@@ -48,13 +48,15 @@ describe.skipIf(!__PIXEL_REFERENCES__)('About page visual', () => {
       {
         method: 'GET',
         match: /\/configuration-status/,
-        json: [{ name: 'JSON Editor', status: 'OK', details: 'ready' }],
+        json: [{ name: 'Test Data', status: 'OK', details: 'ready' }],
       },
       {
         method: 'GET',
         match: /\/readme$/,
         respond: () =>
-          new Response('<h1>JSON Editor Extension for Polarion ALM</h1><p>Edit JSON attachments.</p>', { status: 200 }),
+          new Response('<h1>Test Data Extension for Polarion ALM</h1><p>Creates and removes test data.</p>', {
+            status: 200,
+          }),
       },
     ]);
     window.history.replaceState({}, '', '?feature=about&embedded=true');

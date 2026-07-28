@@ -1,23 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.0"?>
 <plugin>
+    <!-- Two webapp contexts: the REST API, and the React app - which serves both the Vite
+         bundle and the administration-menu icons. One extension element holds them, as
+         Polarion's own com.polarion.alm.ui does. -->
     <extension
             point="com.polarion.portal.tomcat.webapps">
         <webapp
                 name="polarion/test-data"
                 contextRoot="webapp/test-data">
         </webapp>
-    </extension>
-
-    <extension
-            point="com.polarion.portal.tomcat.webapps">
-        <webapp
-                name="polarion/test-data-admin"
-                contextRoot="webapp/test-data-admin">
-        </webapp>
-    </extension>
-    <extension
-            point="com.polarion.portal.tomcat.webapps">
         <webapp
                 name="polarion/test-data-app"
                 contextRoot="webapp/test-data-app">
