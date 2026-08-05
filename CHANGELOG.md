@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.1.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/compare/v5.0.2...v5.1.0) (2026-08-05)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @grigoriev/react-sbb-polarion to ^0.2.0 ([#102](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/issues/102)) ([eeaeefd](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/commit/eeaeefd9e76d7e5e15f8d49fa237023d1177a145))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v15.10.0 ([#94](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/issues/94)) ([80abf17](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/commit/80abf175192cbea67c0120e0f4229ff32fa8e1cb))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v15.10.1 ([#98](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/issues/98)) ([ee983f4](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/commit/ee983f4b8cea774117e0be7a0d6e0b2bdce731c0))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v15.6.0 ([#80](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/issues/80)) ([1eaf66b](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/commit/1eaf66bad2dd607ca533331b774e7b83296424c2))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v15.7.0 ([#82](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/issues/82)) ([ed81387](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/commit/ed813876ef64de1958352c6aa9ada7bcca83e166))
+
 ## [5.0.2](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/compare/v5.0.1...v5.0.2) (2026-07-15)
 
 
