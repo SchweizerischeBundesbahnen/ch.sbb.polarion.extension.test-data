@@ -1,5 +1,14 @@
 # Changelog
 
+## [5.1.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/compare/v5.1.0...v5.1.1) (2026-09-04)
+
+
+### Bug Fixes
+
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v16.1.0 ([#146](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/issues/146)) ([4b6abcc](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/commit/4b6abccfc7e5d406fe069a21f4e674ffa115cf56))
+* **deps:** update dependency globals to v17.12.0 ([#148](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/issues/148)) ([16fe385](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/commit/16fe38591c54b465d8240ee7195ec9e6260fded8))
+* **deps:** update dependency typescript-eslint to v8.69.0 ([#144](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/issues/144)) ([51077bb](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/commit/51077bb62d4ed202e3e8ceb74cc868652c15b990))
+
 ## [5.1.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/compare/v5.0.2...v5.1.0) (2026-08-21)
 
 
