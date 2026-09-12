@@ -1,5 +1,18 @@
 # Changelog
 
+## [5.1.1](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/compare/v5.1.0...v5.1.1) (2026-09-12)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @types/react-dom to v19.2.7 ([#150](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/issues/150)) ([b4ec557](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/commit/b4ec5578790ef3fb2924042f0eada4995b180700))
+* **deps:** update dependency ch.sbb.polarion.extensions:ch.sbb.polarion.extension.generic to v16.1.0 ([#146](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/issues/146)) ([4b6abcc](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/commit/4b6abccfc7e5d406fe069a21f4e674ffa115cf56))
+* **deps:** update dependency eslint to v10.10.0 ([#153](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/issues/153)) ([e7c9ecf](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/commit/e7c9ecf4956e9316116d78af19701a1e4046aef8))
+* **deps:** update dependency globals to v17.12.0 ([#148](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/issues/148)) ([16fe385](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/commit/16fe38591c54b465d8240ee7195ec9e6260fded8))
+* **deps:** update dependency playwright to v1.63.0 ([#154](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/issues/154)) ([ef5d2a6](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/commit/ef5d2a6ea29d31c0356ab08a6459beddc5fde9e1))
+* **deps:** update dependency typescript-eslint to v8.69.0 ([#144](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/issues/144)) ([51077bb](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/commit/51077bb62d4ed202e3e8ceb74cc868652c15b990))
+* **deps:** update dependency typescript-eslint to v8.70.0 ([#155](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/issues/155)) ([00141f8](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/commit/00141f857919069c1ef57af18349d4dca54540b0))
+
 ## [5.1.0](https://github.com/SchweizerischeBundesbahnen/ch.sbb.polarion.extension.test-data/compare/v5.0.2...v5.1.0) (2026-08-21)
 
 
