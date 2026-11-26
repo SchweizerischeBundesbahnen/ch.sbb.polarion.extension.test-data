@@ -72,7 +72,9 @@ describe('App router', () => {
     window.history.replaceState({}, '', '?');
     render(<App />);
     await vi.waitFor(() => expect(document.querySelector('.landing .alert-error')).not.toBeNull());
-    expect(document.querySelector('.alert-error')!.textContent).toContain('Could not load projects');
+    const alert = document.querySelector('.landing .alert-error')!;
+    expect(alert.getAttribute('role')).toBe('alert'); // announced to screen-reader users when it appears
+    expect(alert.textContent).toContain('Could not load projects');
   });
 
   it('renders the About page for ?feature=about', async () => {

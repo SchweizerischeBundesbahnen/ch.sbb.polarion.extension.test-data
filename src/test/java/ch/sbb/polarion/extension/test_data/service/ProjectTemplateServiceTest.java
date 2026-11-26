@@ -2,6 +2,7 @@ package ch.sbb.polarion.extension.test_data.service;
 
 import com.polarion.alm.projects.IProjectLifecycleManager;
 import com.polarion.core.util.StreamUtils;
+import com.polarion.core.util.logging.Logger;
 import com.polarion.platform.core.IPlatform;
 import com.polarion.platform.core.PlatformContext;
 import com.polarion.platform.service.repository.IRepositoryConnection;
@@ -12,6 +13,8 @@ import lombok.SneakyThrows;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 
 import java.io.ByteArrayInputStream;
@@ -31,6 +34,8 @@ import static org.mockito.Mockito.*;
 class ProjectTemplateServiceTest {
     private MockedStatic<PlatformContext> platformContextMockedStatic;
     private MockedStatic<StreamUtils> streamUtilsMockedStatic;
+    private MockedStatic<Logger> loggerMockedStatic;
+    private Logger logger;
     private IRepositoryService repositoryService;
     private IProjectLifecycleManager projectLifecycleManager;
     private IRepositoryConnection repositoryConnection;
@@ -56,11 +61,18 @@ class ProjectTemplateServiceTest {
 
         streamUtilsMockedStatic = mockStatic(StreamUtils.class);
 
+        logger = mock(Logger.class);
+        loggerMockedStatic = mockStatic(Logger.class);
+        loggerMockedStatic.when(() -> Logger.getLogger(ProjectTemplateService.class)).thenReturn(logger);
+
         service = new ProjectTemplateService();
     }
 
     @AfterEach
     void tearDown() {
+        if (loggerMockedStatic != null) {
+            loggerMockedStatic.close();
+        }
         if (platformContextMockedStatic != null) {
             platformContextMockedStatic.close();
         }
@@ -361,6 +373,48 @@ class ProjectTemplateServiceTest {
                 () -> service.downloadProject("invalid/path", null));
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"a\u0000b", "a\nb", "a\tb", "a:b", "a*b", "a?b", "a\"b", "a<b", "a>b", "a|b"})
+    void testDownloadProjectRejectsCharactersAPathCannotHold(String projectId) {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> service.downloadProject(projectId, null));
+
+        assertEquals("Project ID contains invalid characters", exception.getMessage());
+        verifyNoInteractions(repositoryService);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"../templates", "a/b", "a\\b", "a\u0000b", "a:b"})
+    void testSaveProjectTemplateRejectsAnInvalidId(String templateId) {
+        InputStream inputStream = new ByteArrayInputStream(new byte[0]);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> service.saveProjectTemplate(templateId, inputStream, null));
+
+        assertEquals("Template ID contains invalid characters", exception.getMessage());
+        verifyNoInteractions(repositoryService, projectLifecycleManager);
+    }
+
+    @Test
+    void testSaveProjectTemplateRejectsAnEmptyId() {
+        InputStream inputStream = new ByteArrayInputStream(new byte[0]);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> service.saveProjectTemplate(" ", inputStream, null));
+
+        assertEquals("Template ID cannot be null or empty", exception.getMessage());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"../templates", "a/b", "a\u0000b"})
+    void testReadTemplateHashRejectsAnInvalidId(String templateId) {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> service.readTemplateHash(templateId));
+
+        assertEquals("Template ID contains invalid characters", exception.getMessage());
+        verifyNoInteractions(repositoryService);
+    }
+
     @Test
     void testNormalizeEntryNameNullOrEmpty() {
         assertNull(service.normalizeEntryName(null));
@@ -434,26 +488,41 @@ class ProjectTemplateServiceTest {
 
         when(repositoryConnection.exists(templateFolder)).thenReturn(true);
         when(templateFolder.toString()).thenReturn(locationPath);
-        doThrow(new RuntimeException("Delete failed")).when(repositoryConnection).delete(templateFolder);
+        RuntimeException deleteFailed = new RuntimeException("Delete failed");
+        doThrow(deleteFailed).when(repositoryConnection).delete(templateFolder);
 
-        // Should not throw exception - cleanup is silent
+        // the failure is logged, not thrown: the caller reports the error that caused the cleanup
         assertDoesNotThrow(() -> service.cleanupTemplateFolder(repositoryConnection, templateFolder));
 
         verify(repositoryConnection).exists(templateFolder);
         verify(repositoryConnection).delete(templateFolder);
+        verify(logger).warn("Failed to clean up template folder: " + locationPath, deleteFailed);
     }
 
     @Test
     void testCleanupTemplateFolderExistsThrowsException() {
         ILocation templateFolder = mock(ILocation.class);
+        RuntimeException connectionError = new RuntimeException("Connection error");
 
-        when(repositoryConnection.exists(templateFolder)).thenThrow(new RuntimeException("Connection error"));
+        when(repositoryConnection.exists(templateFolder)).thenThrow(connectionError);
 
-        // Should not throw exception - cleanup is silent
+        // the failure is logged, not thrown: the caller reports the error that caused the cleanup
         assertDoesNotThrow(() -> service.cleanupTemplateFolder(repositoryConnection, templateFolder));
 
         verify(repositoryConnection).exists(templateFolder);
         verify(repositoryConnection, never()).delete(templateFolder);
+        verify(logger).warn(startsWith("Failed to clean up template folder: "), eq(connectionError));
+    }
+
+    @Test
+    void testCleanupTemplateFolderLogsNothingWhenItSucceeds() {
+        ILocation templateFolder = mock(ILocation.class);
+
+        when(repositoryConnection.exists(templateFolder)).thenReturn(true);
+
+        service.cleanupTemplateFolder(repositoryConnection, templateFolder);
+
+        verifyNoInteractions(logger);
     }
 
     @Test
