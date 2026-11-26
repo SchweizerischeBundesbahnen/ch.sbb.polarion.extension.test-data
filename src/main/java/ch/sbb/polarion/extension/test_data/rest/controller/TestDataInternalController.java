@@ -209,6 +209,10 @@ public class TestDataInternalController {
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity("Failed to retrieve template hash: " + e.getMessage())
                     .build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(e.getMessage())
+                    .build();
         }
     }
 

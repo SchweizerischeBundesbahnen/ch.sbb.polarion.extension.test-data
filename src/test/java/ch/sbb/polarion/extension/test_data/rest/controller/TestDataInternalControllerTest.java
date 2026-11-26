@@ -72,4 +72,15 @@ class TestDataInternalControllerTest {
             assertEquals("Failed to retrieve template hash: Failed to read template hash: template", response.getEntity());
         }
     }
+
+    @Test
+    void getTemplateHashAnswersBadRequestForAnInvalidTemplateId() {
+        when(projectTemplateService.readTemplateHash("a:b"))
+                .thenThrow(new IllegalArgumentException("Template ID contains invalid characters"));
+
+        try (Response response = controller.getTemplateHash("a:b")) {
+            assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+            assertEquals("Template ID contains invalid characters", response.getEntity());
+        }
+    }
 }
