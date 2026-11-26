@@ -22,6 +22,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import jakarta.inject.Singleton;
 import jakarta.servlet.http.HttpServletRequest;
@@ -51,7 +52,7 @@ public class TestDataInternalController {
     @Context
     private HttpServletRequest httpServletRequest;
 
-    protected final PolarionService polarionService;
+    private final PolarionService polarionService;
     private final ModuleService moduleService;
     private final ProjectTemplateService projectTemplateService;
     private final LinksService linksService;
@@ -59,11 +60,25 @@ public class TestDataInternalController {
 
     @SuppressWarnings("unused")
     public TestDataInternalController() {
-        polarionService = new PolarionService();
-        moduleService = new ModuleService();
-        projectTemplateService = new ProjectTemplateService();
-        linksService = new LinksService();
-        baselineService = new BaselineService();
+        this(new PolarionService(), new ModuleService(), new ProjectTemplateService(), new LinksService(), new BaselineService());
+    }
+
+    /**
+     * Not public on purpose: Jersey instantiates a resource through a public constructor, and an
+     * {@code @Inject} one would make HK2 look for bindings of these services, which nothing registers.
+     */
+    @VisibleForTesting
+    TestDataInternalController(PolarionService polarionService, ModuleService moduleService, ProjectTemplateService projectTemplateService,
+                               LinksService linksService, BaselineService baselineService) {
+        this.polarionService = polarionService;
+        this.moduleService = moduleService;
+        this.projectTemplateService = projectTemplateService;
+        this.linksService = linksService;
+        this.baselineService = baselineService;
+    }
+
+    protected PolarionService getPolarionService() {
+        return polarionService;
     }
 
     @POST
@@ -192,7 +207,11 @@ public class TestDataInternalController {
             );
         } catch (ProjectTemplateService.TemplateProcessingException e) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Failed to save template due to user project creation error: " + e.getMessage())
+                    .entity("Failed to retrieve template hash: " + e.getMessage())
+                    .build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(e.getMessage())
                     .build();
         }
     }

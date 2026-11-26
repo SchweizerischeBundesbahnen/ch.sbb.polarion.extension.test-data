@@ -3,6 +3,7 @@ package ch.sbb.polarion.extension.test_data.service;
 import com.polarion.alm.projects.IProjectLifecycleManager;
 import com.polarion.core.util.StreamUtils;
 import com.polarion.core.util.StringUtils;
+import com.polarion.core.util.logging.Logger;
 import com.polarion.platform.core.PlatformContext;
 import com.polarion.platform.service.repository.IRepositoryConnection;
 import com.polarion.platform.service.repository.IRepositoryReadOnlyConnection;
@@ -34,6 +35,9 @@ public class ProjectTemplateService {
             Location.getLocationWithRepository(IRepositoryService.DEFAULT, "/.polarion/projects/templates/");
     protected static final String TEMPLATE_HASH_FILE = ".templatehash";
 
+    private static final String INVALID_ID_CHARACTERS = ":*?\"<>|";
+
+    private final Logger logger = Logger.getLogger(ProjectTemplateService.class);
     private final IRepositoryService repositoryService;
     private final IProjectLifecycleManager projectLifecycleManager;
 
@@ -48,10 +52,11 @@ public class ProjectTemplateService {
      * @param templateId   The unique identifier for the template
      * @param inputStream  The input stream containing the template zip file
      * @param templateHash The hash value of the template, used for integrity verification
-     * @throws IllegalArgumentException    if templateId is null or empty
+     * @throws IllegalArgumentException    if templateId is null, empty or contains invalid characters
      * @throws TemplateProcessingException if template processing fails
      */
     public void saveProjectTemplate(@NotNull String templateId, @NotNull InputStream inputStream, @Nullable String templateHash) {
+        validateId(templateId, "Template ID");
         try {
             byte[] zipData = StreamUtils.suckStream(inputStream, true);
             if (canProcessZip(zipData)) {
@@ -70,12 +75,12 @@ public class ProjectTemplateService {
      * @param projectId    the unique identifier of the project to download
      * @param projectGroup the group of the project
      * @return byte array containing the compressed template
-     * @throws IllegalArgumentException    if projectId is null or empty
+     * @throws IllegalArgumentException    if projectId is null, empty or contains invalid characters
      * @throws TemplateProcessingException if the repository connection fails or ZIP creation fails
      */
     @NotNull
     public byte[] downloadProject(@NotNull String projectId, @Nullable String projectGroup) {
-        validateProjectId(projectId);
+        validateId(projectId, "Project ID");
 
         String path = StringUtils.isEmpty(projectGroup)
                 ? String.format("/%s", projectId)
@@ -98,10 +103,12 @@ public class ProjectTemplateService {
      *
      * @param templateId The unique identifier of the template
      * @return The stored hash, or null if hash file doesn't exist
+     * @throws IllegalArgumentException    if templateId is null, empty or contains invalid characters
      * @throws TemplateProcessingException if reading fails
      */
     @Nullable
     public String readTemplateHash(@NotNull String templateId) {
+        validateId(templateId, "Template ID");
         IRepositoryReadOnlyConnection connection = repositoryService.getReadOnlyConnection(TEMPLATES_ROOT_REPO);
         ILocation templateFolder = TEMPLATES_ROOT_REPO.append(templateId);
         ILocation hashLocation = templateFolder.append(TEMPLATE_HASH_FILE);
@@ -289,19 +296,25 @@ public class ProjectTemplateService {
             if (connection.exists(templateFolder)) {
                 connection.delete(templateFolder);
             }
-        } catch (Exception ignored) {
-            // Swallow exceptions during cleanup
+        } catch (Exception e) {
+            // the original failure is what the caller reports, so a failed cleanup is only logged
+            logger.warn("Failed to clean up template folder: " + templateFolder, e);
         }
     }
 
-    private void validateProjectId(@Nullable String projectId) {
-        if (projectId == null || projectId.trim().isEmpty()) {
-            throw new IllegalArgumentException("Project ID cannot be null or empty");
+    /**
+     * An ID becomes one segment of a repository path, so it must not leave its folder or carry
+     * characters a repository path or a file system cannot hold.
+     */
+    private void validateId(@Nullable String id, @NotNull String name) {
+        if (id == null || id.trim().isEmpty()) {
+            throw new IllegalArgumentException(name + " cannot be null or empty");
         }
 
-        String trimmed = projectId.trim();
-        if (trimmed.contains("..") || trimmed.contains("/") || trimmed.contains("\\")) {
-            throw new IllegalArgumentException("Project ID contains invalid characters");
+        String trimmed = id.trim();
+        if (trimmed.contains("..") || trimmed.contains("/") || trimmed.contains("\\")
+                || trimmed.chars().anyMatch(c -> Character.isISOControl(c) || INVALID_ID_CHARACTERS.indexOf(c) >= 0)) {
+            throw new IllegalArgumentException(name + " contains invalid characters");
         }
     }
 

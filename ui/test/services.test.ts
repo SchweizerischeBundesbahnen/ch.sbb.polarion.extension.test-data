@@ -65,7 +65,7 @@ describe('fetchProjects', () => {
 
   it('throws on a non-OK response', async () => {
     installFetchMock([{ method: 'GET', match: /\/projects/, respond: () => jsonResponse({}, 401) }]);
-    await expect(fetchProjects()).rejects.toThrow();
+    await expect(fetchProjects()).rejects.toThrow('HTTP 401');
   });
 
   it('sends the bearer token when configured', async () => {
